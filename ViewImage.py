@@ -66,10 +66,15 @@ def btn1Click():
     wwValue = viewer1.getWindowWidth()
     wlValue = viewer1.getWindowLevel()        
 
-    winwidthScrollbar.setValue((wwValue-wwMin)/(wwMax-wwMin) * 1000) 
-    winlevelScrollbar.setValue((wlValue-wlMin)/(wlMax-wlMin) * 1000) 
-    winwidthText.setText(str(round(wwValue,2)))
-    winlevelText.setText(str(round(wlValue,2)))      
+
+    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    winlevelScrollbar.setValue(round(wlMin,4)) 
+    
+    winwidthText.setText(str(round(wwValue,4)+1))
+    winlevelText.setText(str(round(wlMin,4)))  
+      
+    viewer1.setWindowWidth(round(wwValue,4)+1)
+    viewer1.setWindowLevel(wlMin)  
     
     
     horscrollbar.setMinimum(1)
@@ -244,15 +249,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     
     window = QWidget()
-
-    #-------------------------------------------------
-    wwMin = 0
-    wwMax = 256
-    wlMin = 0
-    wlMax = 256
-    
-    wwValue = 256
-    wlValue = 128
     
     #-------------------------------------------------
     # Create the user interface objects
@@ -329,16 +325,25 @@ if __name__ == '__main__':
     slicescrollbar = QScrollBar()
     slicescrollbar.setOrientation(1)
     
-    slicescrollbar.setMinimum(0)
-    slicescrollbar.setMaximum(100)
+    slicescrollbar.setMinimum(viewer1.getSliceMin())
+    slicescrollbar.setMaximum(viewer1.getSliceMax())
     slicescrollbar.setValue(0)
     slicescrollbar.setPageStep(1)
     slicesTextbox.setText(str(0))
     
     # -----------------------------------------------
     # window level, window width adjust
+    wwMin = viewer1.getWinWidthRange()[0]
+    wwMax = viewer1.getWinWidthRange()[1]
+    wlMin = viewer1.getWinLevelRange()[0]
+    wlMax = viewer1.getWinLevelRange()[1]
+
+    wwValue = viewer1.getWindowWidth()
+    wlValue = viewer1.getWindowLevel() 
+    
+    
     winwidthLabel = QLabel()
-    winwidthLabel.setText('Window Width')
+    winwidthLabel.setText('Window Max')
     winwidthText = QLineEdit()
     winwidthText.setFixedSize(80, 20)
     winwidthScrollbar = QScrollBar()
@@ -346,12 +351,9 @@ if __name__ == '__main__':
     winwidthScrollbar.setMinimum(0)
     winwidthScrollbar.setMaximum(999)   
     winwidthScrollbar.setPageStep(1)
-    winwidthText.setValidator
-    winwidthScrollbar.setValue((wwValue-wwMin)/(wwMax-wwMin) * 1000)    
-    winwidthText.setText(str(wwValue))
     
     winlevelLabel = QLabel()
-    winlevelLabel.setText('Window Level')    
+    winlevelLabel.setText('Window Min')    
     winlevelText = QLineEdit()
     winlevelText.setFixedSize(80, 20)
     winlevelScrollbar = QScrollBar()
@@ -360,9 +362,21 @@ if __name__ == '__main__':
     winlevelScrollbar.setMaximum(999) 
     winlevelScrollbar.setPageStep(1)
     
+    
+    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    winlevelScrollbar.setValue(round(wlMin,4)) 
+    
+    
     winlevelText.setValidator
-    winlevelScrollbar.setValue((wlValue-wlMin)/(wlMax-wlMin) * 1000)
-    winlevelText.setText(str(wlValue))
+    winwidthText.setValidator
+    winwidthText.setText(str(round(wwValue,4)+1))
+    winlevelText.setText(str(round(wlMin,4)))  
+      
+    viewer1.setWindowWidth(round(wwValue,4)+1)
+    viewer1.setWindowLevel(wlMin)  
+    
+    
+    
     
     ortlist = QComboBox()
     ortlist.addItem('Dim 1 vs Dim 2')
