@@ -134,8 +134,6 @@ class QtImageViewer(QGraphicsView):
         self.__thruPlane = 0
         self.__vert = 0
         self.__horiz = 0
-        self.__horiz = 0
-        self.__vert = 0
         self.__flipX = False
         self.__flipY = False
         self.__rotateAngle = 270
@@ -218,7 +216,7 @@ class QtImageViewer(QGraphicsView):
         self.ch.show()
         
         self.display_VertLine(self.getVertVal())
-        self.display_HorizLine(self.getVertVal())
+        self.display_HorizLine(self.getHorizVal())
         
             
     def clearCrosshairPopup(self):
@@ -260,8 +258,8 @@ class QtImageViewer(QGraphicsView):
             data3 = self.__imageData[:,self.getVertVal(),self.getHorizVal()]
 
 
-        self.tp.plt1.imshow(data1)
-        self.tp.plt2.imshow(data2)
+        self.tp.plt1.imshow(data1, aspect='auto')
+        self.tp.plt2.imshow(data2, aspect='auto')
         self.tp.plt3.plot(data3)
         
         self.tp.plt3.set_title("Through-Plane Profile")
@@ -271,30 +269,30 @@ class QtImageViewer(QGraphicsView):
         self.tp.show()
         
         self.display_VertLine(self.getVertVal())
-        self.display_HorizLine(self.getVertVal())
+        self.display_HorizLine(self.getHorizVal())
         
         
     def updateThroughPlane(self):
         if self.__imgorientation == 1:
             data1 = np.rot90(self.__imageData[:,self.getHorizVal(),:])
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:]) 
-            data3 = self.__imageData[self.getVertVal(),self.getHorizVal(),:]
+            data3 = self.__imageData[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
         elif self.__imgorientation == 2:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
-            data3 = self.__imageData[self.getVertVal(),:,self.getHorizVal()]
+            data3 = self.__imageData[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
         elif self.__imgorientation == 3:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[:,self.getVertVal(),:])
-            data3 = self.__imageData[:,self.getVertVal(),self.getHorizVal()]
+            data3 = self.__imageData[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
 
 
         self.tp.plt1.clear()
         self.tp.plt2.clear()
         self.tp.plt3.clear()
         
-        self.tp.plt1.imshow(data1)
-        self.tp.plt2.imshow(data2)
+        self.tp.plt1.imshow(data1, aspect='auto')
+        self.tp.plt2.imshow(data2, aspect='auto')
         self.tp.plt3.plot(data3)
         
         self.tp.plt3.set_title("Through-Plane Profile")
@@ -341,12 +339,13 @@ class QtImageViewer(QGraphicsView):
     def updateHorizontalProfile(self, value):
         self.setHorizVal(value)
         
+        
         if self.__imgorientation == 1:
-            horizArr = self.__imageData[:,value,self.getCurSlice()]
-        elif self.__imgorientation == 2:   
-            horizArr = self.__imageData[:,self.getCurSlice(),value]
+            horizArr = self.__imageData[:,self.getImgHeight()-1-value,self.getCurSlice()]
+        elif self.__imgorientation == 2:
+            horizArr = self.__imageData[:,self.getCurSlice(),self.getImgHeight()-1-value]
         elif self.__imgorientation == 3:
-            horizArr = self.__imageData[self.getCurSlice(),:,value]
+            horizArr = self.__imageData[self.getCurSlice(),:,self.getImgHeight()-1-value]
         else:
             print("ERROR: Invlaid plane")
         
@@ -364,7 +363,7 @@ class QtImageViewer(QGraphicsView):
             self.scene.removeItem(self.VLine)
         except:
             pass
-        self.VLine = self.scene.addLine(self.getVertVal(), 0, self.getVertVal(), self.getImgHeight(), QPen(Qt.red))
+        self.VLine = self.scene.addLine(value, 0, value, self.getImgHeight(), QPen(Qt.red))
     
          
     def display_HorizLine(self, value):
@@ -372,7 +371,7 @@ class QtImageViewer(QGraphicsView):
             self.scene.removeItem(self.HLine)
         except:
             pass
-        self.HLine = self.scene.addLine(0, self.getHorizVal(), self.getImgWidth(), self.getHorizVal(), QPen(Qt.green))
+        self.HLine = self.scene.addLine(0, value, self.getImgWidth(), value, QPen(Qt.green))
 
         
     def getHorizVal(self):
