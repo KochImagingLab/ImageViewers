@@ -138,8 +138,6 @@ class QtImageViewer(QGraphicsView):
         self.__thruPlane = 0
         self.__vert = 0
         self.__horiz = 0
-        self.__horiz = 0
-        self.__vert = 0
         self.__flipX = False
         self.__flipY = False
         self.__rotateAngle = 270
@@ -248,8 +246,17 @@ class QtImageViewer(QGraphicsView):
         if(self.__thruPlane == 2):
             self.__thruPlane = 0
             self.tp.close()
+            
+    def clearCrosshairs(self):
+        self.scene.removeItem(self.HLine)
+        self.scene.removeItem(self.VLine)
+        self.setHorizVal(0)
+        self.setVertVal(0)
+        if(self.__thruPlane == 2):
+            self.__thruPlane = 0
         
     def setCrosshair(self, value, data):
+        
         if self.__imageData is not None:
             self.__crosshair = value
             if(value == 2):
@@ -268,22 +275,22 @@ class QtImageViewer(QGraphicsView):
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:]) 
             data1_2 = np.rot90(data[:,self.getHorizVal(),:])
             data2_2 = np.rot90(data[self.getVertVal(),:,:]) 
-            data3 = self.__imageData[self.getVertVal(),self.getHorizVal(),:]
-            data3_2 = data[self.getVertVal(),self.getHorizVal(),:]
+            data3 = self.__imageData[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
+            data3_2 = data[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
         elif self.__imgorientation == 2:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
             data1_2 = np.rot90(data[:,:,self.getHorizVal()])
             data2_2 = np.rot90(data[self.getVertVal(),:,:])
-            data3 = self.__imageData[self.getVertVal(),:,self.getHorizVal()]
-            data3_2 = data[self.getVertVal(),:,self.getHorizVal()]
+            data3 = self.__imageData[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
+            data3_2 = data[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
         elif self.__imgorientation == 3:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[:,self.getVertVal(),:])
             data1_2 = np.rot90(data[:,:,self.getHorizVal()])
             data2_2 = np.rot90(data[:,self.getVertVal(),:])
-            data3 = self.__imageData[:,self.getVertVal(),self.getHorizVal()]
-            data3_2 = data[:,self.getVertVal(),self.getHorizVal()]
+            data3 = self.__imageData[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
+            data3_2 = data[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
 
 
         self.tp.plt1.imshow(data1, aspect='auto')
@@ -310,22 +317,22 @@ class QtImageViewer(QGraphicsView):
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:]) 
             data1_2 = np.rot90(data[:,self.getHorizVal(),:])
             data2_2 = np.rot90(data[self.getVertVal(),:,:]) 
-            data3 = self.__imageData[self.getVertVal(),self.getHorizVal(),:]
-            data3_2 = data[self.getVertVal(),self.getHorizVal(),:]
+            data3 = self.__imageData[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
+            data3_2 = data[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
         elif self.__imgorientation == 2:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
             data1_2 = np.rot90(data[:,:,self.getHorizVal()])
             data2_2 = np.rot90(data[self.getVertVal(),:,:])
-            data3 = self.__imageData[self.getVertVal(),:,self.getHorizVal()]
-            data3_2 = data[self.getVertVal(),:,self.getHorizVal()]
+            data3 = self.__imageData[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
+            data3_2 = data[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
         elif self.__imgorientation == 3:
             data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
             data2 = np.rot90(self.__imageData[:,self.getVertVal(),:])
             data1_2 = np.rot90(data[:,:,self.getHorizVal()])
             data2_2 = np.rot90(data[:,self.getVertVal(),:])
-            data3 = self.__imageData[:,self.getVertVal(),self.getHorizVal()]
-            data3_2 = data[:,self.getVertVal(),self.getHorizVal()]
+            data3 = self.__imageData[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
+            data3_2 = data[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
 
         
         self.tp.plt1.clear()
@@ -393,14 +400,14 @@ class QtImageViewer(QGraphicsView):
         self.setHorizVal(value)
         
         if self.__imgorientation == 1:
-            horizArr = self.__imageData[:,value,self.getCurSlice()]
-            horizArr2 = data[:,value,self.getCurSlice()]
+            horizArr = self.__imageData[:,self.getImgHeight()-1-value,self.getCurSlice()]
+            horizArr2 = data[:,self.getImgHeight()-1-value,self.getCurSlice()]
         elif self.__imgorientation == 2:   
-            horizArr = self.__imageData[:,self.getCurSlice(),value]
-            horizArr2 = data[:,self.getCurSlice(),value]
+            horizArr = self.__imageData[:,self.getCurSlice(),self.getImgHeight()-1-value]
+            horizArr2 = data[:,self.getCurSlice(),self.getImgHeight()-1-value]
         elif self.__imgorientation == 3:
-            horizArr = self.__imageData[self.getCurSlice(),:,value]
-            horizArr2 = data[self.getCurSlice(),:,value]
+            horizArr = self.__imageData[self.getCurSlice(),:,self.getImgHeight()-1-value]
+            horizArr2 = data[self.getCurSlice(),:,self.getImgHeight()-1-value]
         else:
             print("ERROR: Invlaid plane")
         

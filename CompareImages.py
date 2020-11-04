@@ -40,7 +40,25 @@ def parseArgs():
     return
 
 
-def btn1Click():          
+def btn1Click():         
+    global viewer1
+    global winwidthScrollbar
+    global winlevelScrollbar
+    global winwidthText
+    global winlevelText  
+    global horscrollbar
+    global verscrollbar
+    global openFileText1
+    global slicescrollbar
+    global slicesTextbox
+    global window
+    global wwMin
+    global wwMax
+    global wlMin
+    global wlMax
+    global wwValue 
+    global wlValue 
+     
     fileName, dummy = QFileDialog.getOpenFileName(window, "Open image file.")
     if len(fileName) and os.path.isfile(fileName): 
         viewer1.loadNIFTI(fileName)
@@ -50,14 +68,7 @@ def btn1Click():
     slicescrollbar.setMinimum(viewer1.getSliceMin())
     slicescrollbar.setMaximum(viewer1.getSliceMax())
     slicescrollbar.setValue(viewer1.getCurSlice())
-    slicesTextbox.setText(str(viewer1.getCurSlice()))  
-    
-    global wwMin
-    global wwMax
-    global wlMin
-    global wlMax
-    global wwValue 
-    global wlValue        
+    slicesTextbox.setText(str(viewer1.getCurSlice()))        
     
     wwMin = viewer1.getWinWidthRange()[0]
     wwMax = viewer1.getWinWidthRange()[1]
@@ -67,10 +78,15 @@ def btn1Click():
     wwValue = viewer1.getWindowWidth()
     wlValue = viewer1.getWindowLevel()        
 
-    winwidthScrollbar.setValue((wwValue-wwMin)/(wwMax-wwMin) * 1000) 
-    winlevelScrollbar.setValue((wlValue-wlMin)/(wlMax-wlMin) * 1000) 
-    winwidthText.setText(str(round(wwValue,2)))
-    winlevelText.setText(str(round(wlValue,2)))      
+
+    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    winlevelScrollbar.setValue(round(wlMin,4)) 
+    
+    winwidthText.setText(str(round(wwValue,4)+1))
+    winlevelText.setText(str(round(wlMin,4)))  
+      
+    viewer1.setWindowWidth(round(wwValue,4)+1)
+    viewer1.setWindowLevel(wlMin)  
     
     
     horscrollbar.setMinimum(1)
@@ -89,6 +105,24 @@ def btn1Click():
     
     
 def btn2Click():          
+    global viewer2
+    global winwidthScrollbar
+    global winlevelScrollbar
+    global winwidthText
+    global winlevelText  
+    global horscrollbar
+    global verscrollbar
+    global openFileText2
+    global slicescrollbar
+    global slicesTextbox
+    global window
+    global wwMin
+    global wwMax
+    global wlMin
+    global wlMax
+    global wwValue 
+    global wlValue 
+    
     fileName, dummy = QFileDialog.getOpenFileName(window, "Open image file.")
     if len(fileName) and os.path.isfile(fileName): 
         viewer2.loadNIFTI(fileName)
@@ -98,34 +132,27 @@ def btn2Click():
     slicescrollbar.setMinimum(viewer2.getSliceMin())
     slicescrollbar.setMaximum(viewer2.getSliceMax())
     slicescrollbar.setValue(viewer2.getCurSlice())
-    slicesTextbox.setText(str(viewer2.getCurSlice()))  
-    
-    global wwMin
-    global wwMax
-    global wlMin
-    global wlMax
-    global wwValue 
-    global wlValue        
-    
+    slicesTextbox.setText(str(viewer2.getCurSlice()))       
+     
     wwMin = viewer2.getWinWidthRange()[0]
     wwMax = viewer2.getWinWidthRange()[1]
     wlMin = viewer2.getWinLevelRange()[0]
     wlMax = viewer2.getWinLevelRange()[1]
-
+ 
     wwValue = viewer2.getWindowWidth()
     wlValue = viewer2.getWindowLevel()        
-
+ 
     winwidthScrollbar.setValue((wwValue-wwMin)/(wwMax-wwMin) * 1000) 
     winlevelScrollbar.setValue((wlValue-wlMin)/(wlMax-wlMin) * 1000) 
     winwidthText.setText(str(round(wwValue,2)))
     winlevelText.setText(str(round(wlValue,2)))      
-    
-    
+     
+     
     horscrollbar.setMinimum(1)
     horscrollbar.setMaximum(int(viewer2.getImgHeight()))
     horscrollbar.setValue(viewer2.getHorizVal())
     horscrollbar.setPageStep(1)
-    
+     
     verscrollbar.setMinimum(1)
     verscrollbar.setMaximum(int(viewer2.getImgWidth()))
     verscrollbar.setValue(viewer2.getVertVal())
@@ -139,6 +166,21 @@ def btn2Click():
     
     
 def enableCrosshair():
+    global viewer1 
+    global viewer2
+    global horscrollbar
+    global verscrollbar
+    global crosshairsBox1
+    global vlayout
+    global chGroupBox
+    global layout
+    global thruplaneBox
+
+    viewer1.setVertVal(viewer1.getImgWidth() // 2)
+    viewer1.setHorizVal(viewer1.getImgHeight() // 2)
+    viewer2.setVertVal(viewer1.getImgWidth() // 2)
+    viewer2.setHorizVal(viewer1.getImgHeight() // 2)
+    
     state = viewer1.setCrosshair(crosshairsBox1.checkState(), viewer2.getImageData())
     
     viewer2.display_VertLine(viewer2.getVertVal())
@@ -153,26 +195,42 @@ def enableCrosshair():
             layout.removeWidget(chGroupBox)
             chGroupBox.setParent(None)
             thruplaneBox.setCheckState(0)
+            viewer2.clearCrosshairs()
         
         
 def enableThroughPlane():
+    global viewer1
+    global viewer2
+    global thruplaneBox
+    
     viewer1.setThruPlane(thruplaneBox.checkState(), viewer2.getImageData())
         
     
 def handleLeftClick(x, y):
+    global viewer1
+    
     row = int(y)
     column = int(x)
     
     if( 0 <= row < viewer1.getImgHeight() and 0 <= column < viewer1.getImgWidth()):
-        horizScrollChange(y)
-        vertScrollChange(x)
+        horizScrollChange(row)
+        vertScrollChange(column)
         
 def slicescrollbarChange(value):
+    global viewer1
+    global viewer2
+    global slicesTextbox
+    
     viewer1.setSlice(value)
     viewer2.setSlice(value)
     slicesTextbox.setText(str(value))     
         
 def slicetextEditChange():
+    global viewer1
+    global viewer2
+    global slicesTextbox
+    global slicescrollbar
+    
     value = slicesTextbox.text()
     if int(value)<0:
         value = 0
@@ -184,31 +242,40 @@ def slicetextEditChange():
     slicescrollbar.setValue(int(value))   
     
 def wlscrollchange(value):
-    global wlMin
-    global wlMax
-    global wlValue 
+    global wwMin
+    global wwMax
+    global wwValue
+    global viewer1
+    global viewer2
+    global winwidthText 
     
-    wlValue = int(value)/1000.0*(wlMax-wlMin) + wlMin        
+    wlValue = float(value)         
     
     viewer1.setWindowLevel(wlValue)
     viewer2.setWindowLevel(wlValue)
-    winlevelText.setText(str(round(wlValue,2)))
+    winlevelText.setText(str(round(wlValue,4)))
     
 def wwscrollchange(value):
     global wwMin
     global wwMax
-    global wwValue 
+    global wwValue
+    global viewer1
+    global viewer2
+    global winwidthText 
     
-    wwValue = int(value)/1000.0*(wwMax-wwMin) + wwMin        
+    wwValue = float(value)       
     
     viewer1.setWindowWidth(wwValue)
     viewer2.setWindowWidth(wwValue)
-    winwidthText.setText(str(round(wwValue,2)))
+    winwidthText.setText(str(round(wwValue,4)))
     
 def wltextchange():
-    global wlMin
-    global wlMax
-    global wlValue 
+    global wwMin
+    global wwMax
+    global wwValue
+    global viewer1
+    global viewer2
+    global winwidthText 
     
     value = winlevelText.text()
            
@@ -218,12 +285,16 @@ def wltextchange():
         wlValue = float(0)
     viewer1.setWindowLevel(wlValue)
     viewer2.setWindowLevel(wlValue)
-    winlevelText.setText(str(round(wlValue,2)))
+    winlevelText.setText(str(round(wlValue,4)))
 
 def wwtextchange():
     global wwMin
     global wwMax
-    global wwValue 
+    global wwValue
+    global viewer1
+    global viewer2
+    global winwidthText 
+    
     
     value = winwidthText.text()
     
@@ -234,33 +305,56 @@ def wwtextchange():
         
     viewer1.setWindowWidth(wwValue)
     viewer2.setWindowWidth(wwValue)
-    winwidthText.setText(str(round(wwValue,2))) 
+    winwidthText.setText(str(round(wwValue,4))) 
     
 def ortChange(value):
+    global viewer1
+    global viewer2
+    global slicescrollbar
+    global slicesTextbox
+    global verscrollbar
+    global verTextbox
+    global horscrollbar
+    global horTextbox
+    global crosshairsBox1
+    
     viewer1.setSliceOrientation(value+1)
     viewer2.setSliceOrientation(value+1)
     
     if (viewer1._pixmapHandle is not None): 
         slicescrollbar.setMaximum(viewer1.getSliceMax())
-        slicescrollbar.setValue(0) #viewer1.getCurSlice())
-        slicesTextbox.setText(str(0)) #str(viewer1.getCurSlice()))   
+        slicescrollbar.setValue(viewer1.getCurSlice())
+        slicesTextbox.setText(str(viewer1.getCurSlice()))   
         
         verscrollbar.setMaximum(int(viewer1.getImgWidth()))
-        verTextbox.setText(str(0))
-        verscrollbar.setValue(int(0)) 
+        
+        viewer1.setVertVal(viewer1.getImgWidth() // 2)
+        viewer1.setHorizVal(viewer1.getImgHeight() // 2)
+        
+        vertVal = viewer1.getVertVal()
+        horzVal = viewer1.getHorizVal()
+        
+        verTextbox.setText(str(vertVal))
+        verscrollbar.setValue(int(vertVal)) 
         if(crosshairsBox1.checkState() == 2):
-            viewer1.updateVerticalProfile(int(0), viewer2.getImageData())
-            viewer2.display_VertLine(int(0))
+            viewer1.updateVerticalProfile(int(vertVal), viewer2.getImageData())
+            viewer2.display_VertLine(int(vertVal))
         horscrollbar.setMaximum(int(viewer1.getImgHeight()))
-        horTextbox.setText(str(0))
-        horscrollbar.setValue(int(0)) 
+        horTextbox.setText(str(horzVal))
+        horscrollbar.setValue(int(horzVal)) 
         if(crosshairsBox1.checkState() == 2):
-            viewer1.updateHorizontalProfile(int(0), viewer2.getImageData())
-            viewer2.display_HorizLine(int(0))
+            viewer1.updateHorizontalProfile(int(horzVal), viewer2.getImageData())
+            viewer2.display_HorizLine(int(horzVal))
 
         
         
 def horizScrollChange(value):
+    global viewer1
+    global viewer2
+    global horscrollbar
+    global horTextbox
+    global crosshairsBox1
+    
     if(crosshairsBox1.checkState() == 2):
         viewer1.updateHorizontalProfile(int(value)-1, viewer2.getImageData())
         viewer2.display_HorizLine(int(value)-1)
@@ -270,6 +364,12 @@ def horizScrollChange(value):
     horscrollbar.setValue(int(value))  
     
 def horizTextChange():
+    global viewer1
+    global viewer2
+    global horscrollbar
+    global horTextbox
+    global crosshairsBox1
+    
     value = horTextbox.text()
     if(crosshairsBox1.checkState() == 2):
         viewer1.updateHorizontalProfile(int(value)-1, viewer2.getImageData())
@@ -279,6 +379,12 @@ def horizTextChange():
     horscrollbar.setValue(int(value))   
     
 def vertScrollChange(value):
+    global viewer1
+    global viewer2
+    global verscrollbar
+    global verTextbox
+    global crosshairsBox1
+    
     if(crosshairsBox1.checkState() == 2):
         viewer1.updateVerticalProfile(int(value)-1, viewer2.getImageData())
         viewer2.display_VertLine(int(value)-1)
@@ -287,6 +393,12 @@ def vertScrollChange(value):
     verscrollbar.setValue(int(value))  
     
 def vertTextChange():
+    global viewer1
+    global viewer2
+    global verscrollbar
+    global verTextbox
+    global crosshairsBox1
+    
     value = verTextbox.text()
     if(crosshairsBox1.checkState() == 2):
         viewer1.updateVerticalProfile(int(value)-1, viewer2.getImageData())
@@ -301,24 +413,33 @@ def vertTextChange():
 #------------------------------------------------------------
         
 
-if __name__ == '__main__':
-    global args
-    parseArgs()
+def main(leftFile, rightFile):
+    global viewer1
+    global viewer2
+    global winwidthScrollbar
+    global winlevelScrollbar
+    global winwidthText
+    global winlevelText  
+    global horscrollbar
+    global verscrollbar
+    global openFileText1
+    global openFileText2
+    global crosshairsBox1
+    global vlayout
+    global chGroupBox
+    global layout
+    global thruplaneBox
+    global slicescrollbar
+    global slicesTextbox
+    global verTextbox
+    global horTextbox
+    global window
 
 
     # Create the application.
     app = QApplication(sys.argv)
     
     window = QWidget()
-
-    #-------------------------------------------------
-    wwMin = 0
-    wwMax = 256
-    wlMin = 0
-    wlMax = 256
-    
-    wwValue = 256
-    wlValue = 128
     
     #-------------------------------------------------
     # Create the user interface objects
@@ -328,8 +449,8 @@ if __name__ == '__main__':
     viewer1.setSceneRect(QRectF(0,0,800,800))
     viewer1.setFocus()
     
-    if(args.left != ''):
-        viewer1.loadNIFTI(args.left)
+    if(leftFile != ''):
+        viewer1.loadNIFTI(leftFile)
 
     # Handle left mouse clicks with custom slot.
     viewer1.leftMouseButtonPressed.connect(handleLeftClick)
@@ -339,8 +460,8 @@ if __name__ == '__main__':
     viewer2.setSceneRect(QRectF(0,0,800,800))
     viewer2.setFocus()
     
-    if(args.right != ''):
-        viewer2.loadNIFTI(args.right)
+    if(rightFile != ''):
+        viewer2.loadNIFTI(rightFile)
 
     # Handle left mouse clicks with custom slot.
     viewer2.leftMouseButtonPressed.connect(handleLeftClick)
@@ -410,17 +531,26 @@ if __name__ == '__main__':
     slicesTextbox.setFixedSize(50, 20)
     slicescrollbar = QScrollBar()
     slicescrollbar.setOrientation(1)
-    
-    slicescrollbar.setMinimum(0)
-    slicescrollbar.setMaximum(100)
-    slicescrollbar.setValue(0)
+     
+    slicescrollbar.setMinimum(viewer1.getSliceMin())
+    slicescrollbar.setMaximum(viewer1.getSliceMax())
+    slicescrollbar.setValue(viewer1.getCurSlice())
     slicescrollbar.setPageStep(1)
-    slicesTextbox.setText(str(0))
+    slicesTextbox.setText(str(viewer1.getCurSlice()))
     
     # -----------------------------------------------
     # window level, window width adjust
+    wwMin = viewer1.getWinWidthRange()[0]
+    wwMax = viewer1.getWinWidthRange()[1]
+    wlMin = viewer1.getWinLevelRange()[0]
+    wlMax = viewer1.getWinLevelRange()[1]
+ 
+    wwValue = viewer1.getWindowWidth()
+    wlValue = viewer1.getWindowLevel() 
+     
+     
     winwidthLabel = QLabel()
-    winwidthLabel.setText('Window Width')
+    winwidthLabel.setText('Window Max')
     winwidthText = QLineEdit()
     winwidthText.setFixedSize(80, 20)
     winwidthScrollbar = QScrollBar()
@@ -428,12 +558,9 @@ if __name__ == '__main__':
     winwidthScrollbar.setMinimum(0)
     winwidthScrollbar.setMaximum(999)   
     winwidthScrollbar.setPageStep(1)
-    winwidthText.setValidator
-    winwidthScrollbar.setValue((wwValue-wwMin)/(wwMax-wwMin) * 1000)    
-    winwidthText.setText(str(wwValue))
-    
+     
     winlevelLabel = QLabel()
-    winlevelLabel.setText('Window Level')    
+    winlevelLabel.setText('Window Min')    
     winlevelText = QLineEdit()
     winlevelText.setFixedSize(80, 20)
     winlevelScrollbar = QScrollBar()
@@ -441,11 +568,23 @@ if __name__ == '__main__':
     winlevelScrollbar.setMinimum(0)
     winlevelScrollbar.setMaximum(999) 
     winlevelScrollbar.setPageStep(1)
-    
+     
+     
+    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    winlevelScrollbar.setValue(round(wlMin,4)) 
+     
+     
     winlevelText.setValidator
-    winlevelScrollbar.setValue((wlValue-wlMin)/(wlMax-wlMin) * 1000)
-    winlevelText.setText(str(wlValue))
-    
+    winwidthText.setValidator
+    winwidthText.setText(str(round(wwValue,4)+1))
+    winlevelText.setText(str(round(wlMin,4)))  
+       
+    viewer1.setWindowWidth(round(wwValue,4)+1)
+    viewer1.setWindowLevel(wlMin)  
+     
+     
+     
+     
     ortlist = QComboBox()
     ortlist.addItem('Dim 1 vs Dim 2')
     ortlist.addItem('Dim 1 vs Dim 3')
@@ -524,4 +663,13 @@ if __name__ == '__main__':
     
     window.show()
     
-    sys.exit(app.exec_())
+    app.exec_()
+    app.quit()
+    
+#MAIN
+if __name__ == '__main__':
+    
+    global args
+    parseArgs()
+    
+    main(args.left, args.right)
