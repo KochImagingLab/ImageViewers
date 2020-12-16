@@ -415,7 +415,9 @@ class QtImageViewer(QGraphicsView):
         y_min = 0
         y_max = nlevels -1 
         
-        dout = ((data - (self.__winwidth/2+self.__winlevel - 0.5))/(self.__winwidth - 1) + 0.5) * (y_max-y_min) + y_min
+        #print("values: level: {l}   width: {w}   min: {mi}   max:{ma}".format(l=self.__winlevel, w=self.__winwidth, mi=y_min, ma=y_max))
+        dout = (data - self.__winlevel)/(self.__winwidth-self.__winlevel) * (y_max-y_min) + y_min
+        #dout = ((data - (self.__winwidth/2+self.__winlevel - 0.5))/(self.__winwidth - 1) + 0.5) * (y_max-y_min) + y_min
         
         dout[dout<y_min] = y_min
         dout[dout>y_max] = y_max

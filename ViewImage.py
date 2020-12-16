@@ -28,8 +28,49 @@ from PyQt5.QtWidgets import QApplication
 #------------------------------------------------------------
 
 
+class QScrollBar_Rescale(QScrollBar):
+    #This probably belongs in the viewerSetup library
+    #increasing .setMaximum to a larger value in setInternalRange will add precision
+    internalMin = 0
+    internalMax = 1000
+    myState = "normal"
+    def __init__(self):
+        super().__init__()
+    
+    def setInternalRange(self, myMin, myMax):
+        self.internalMin = myMin
+        self.internalMax = myMax
+        if( (myMax-myMin) < 50):
+            self.myState = "translate"
+            self.setMinimum(0)
+            self.setMaximum(1000)
+            self.setPageStep(10)
+        else:
+            self.myState = "normal"
+            self.setMinimum(myMin)
+            self.setMaximum(myMax)
+            self.setPageStep(int( (myMax-myMin)/100)) 
+        return
 
+    #need to override the movement of the bar to the textbox
+    def translateFromBar(self):
+        return self.translateFromBar(self.getValue())
 
+    def translateFromBar(self, myVal):
+        if(self.myState == "translate"):
+            newVal = (myVal - self.minimum())/(self.maximum() - self.minimum()) * (self.internalMax - self.internalMin) + self.internalMin
+        else:
+            newVal = float(myVal)
+        return newVal
+
+    #need to override the update of the textbox back to the bar
+    def setValue(self, myVal):
+        if(self.myState == "translate"):
+            newVal = (myVal - self.internalMin)/(self.internalMax - self.internalMin) * (self.maximum() - self.minimum()) + self.minimum()
+            super().setValue(int(newVal))
+        else:
+            super().setValue(int(myVal))
+        return
         
 def parseArgs():
     #parse all of the passed in arguments
@@ -83,10 +124,13 @@ def btn1Click():
     wlValue = viewer1.getWindowLevel()        
 
 
-    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    winwidthScrollbar.setInternalRange(wwMin, wwMax)
+    winlevelScrollbar.setInternalRange(wlMin, wlMax)
+    
+    winwidthScrollbar.setValue(round(wwValue,4)) 
     winlevelScrollbar.setValue(round(wlMin,4)) 
     
-    winwidthText.setText(str(round(wwValue,4)+1))
+    winwidthText.setText(str(round(wwValue,4)))
     winlevelText.setText(str(round(wlMin,4)))  
       
     viewer1.setWindowWidth(round(wwValue,4)+1)
@@ -171,55 +215,49 @@ def slicetextEditChange():
         
     viewer1.setSlice(int(value))
     slicescrollbar.setValue(int(value))   
-    
+
 def wlscrollchange(value):
-    global wlMin
-    global wlMax
     global wlValue
     global viewer1
     global winlevelText 
+    global winlevelScrollbar
     
-    wlValue = float(value)         
-    
+    wlValue = winlevelScrollbar.translateFromBar(value)
     viewer1.setWindowLevel(wlValue)
     winlevelText.setText(str(round(wlValue,4)))
     
 def wwscrollchange(value):
-    global wwMin
-    global wwMax
     global wwValue 
     global viewer1
     global winwidthText
-    
-    wwValue = float(value)       
-    
+    global winwidthScrollbar
+
+    wwValue = winwidthScrollbar.translateFromBar(value)
     viewer1.setWindowWidth(wwValue)
-    
     winwidthText.setText(str(round(wwValue,4)))
     
 def wltextchange():
-    global wlMins
-    global wlMax
     global wlValue 
     global viewer1
     global winlevelText
-    
+    global winlevelScrollbar
+
     value = winlevelText.text()
            
     try:
         wlValue = float(value)
     except:
         wlValue = float(0)
-    viewer1.setWindowLevel(wlValue)
-    
+
+    winlevelScrollBar.setValue(wlValue)
+    viewer1.setWindowLevel(wlValue)    
     winlevelText.setText(str(round(wlValue,4)))
 
 def wwtextchange():
-    global wwMin
-    global wwMax
     global wwValue
     global viewer1
     global winwidthText 
+    global winwidthScrollbar
     
     value = winwidthText.text()
     
@@ -227,7 +265,8 @@ def wwtextchange():
         wwValue = float(value)
     except:
         wwValue = float(0)
-        
+
+    winwidthScrollbar.setValue(wwValue)        
     viewer1.setWindowWidth(wwValue)
     winwidthText.setText(str(round(wwValue,4)))
     
@@ -442,30 +481,37 @@ def main(thisFile):
     winwidthLabel.setText('Window Max')
     winwidthText = QLineEdit()
     winwidthText.setFixedSize(80, 20)
-    winwidthScrollbar = QScrollBar()
+    #winwidthScrollbar = QScrollBar()
+    winwidthScrollbar = QScrollBar_Rescale() #QScrollBar()
     winwidthScrollbar.setOrientation(1)
-    winwidthScrollbar.setMinimum(0)
-    winwidthScrollbar.setMaximum(999)   
-    winwidthScrollbar.setPageStep(1)
+    #how to get this to match the scaling of the image? 
+    #could do a 0 to 100 and make this percentage if the total range is < 100
+    #or maybe we just make the scroll bar 0 to 100 and multiply by (max-min)/100 for the displaybox?
+    winwidthScrollbar.setInternalRange(wwMin, wwMax)
+    #winwidthScrollbar.setMinimum(0)
+    #winwidthScrollbar.setMaximum(999)   
+    #winwidthScrollbar.setPageStep(1)
      
     winlevelLabel = QLabel()
     winlevelLabel.setText('Window Min')    
     winlevelText = QLineEdit()
     winlevelText.setFixedSize(80, 20)
-    winlevelScrollbar = QScrollBar()
+    winlevelScrollbar = QScrollBar_Rescale() #QScrollBar()
     winlevelScrollbar.setOrientation(1)
-    winlevelScrollbar.setMinimum(0)
-    winlevelScrollbar.setMaximum(999) 
-    winlevelScrollbar.setPageStep(1)
+    #Same as above
+    winlevelScrollbar.setInternalRange(wlMin, wlMax)
+    #winlevelScrollbar.setMinimum(0)
+    #winlevelScrollbar.setMaximum(999) 
+    #winlevelScrollbar.setPageStep(1)
      
-     
-    winwidthScrollbar.setValue(round(wwValue,4)+1) 
+    #TODO - this doesn't seem to be setting correctly 
+    winwidthScrollbar.setValue(round(wwValue,4)) 
     winlevelScrollbar.setValue(round(wlMin,4)) 
      
      
     winlevelText.setValidator
     winwidthText.setValidator
-    winwidthText.setText(str(round(wwValue,4)+1))
+    winwidthText.setText(str(round(wwValue,4)))
     winlevelText.setText(str(round(wlMin,4)))  
        
     viewer1.setWindowWidth(round(wwValue,4)+1)
