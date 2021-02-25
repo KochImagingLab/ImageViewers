@@ -16,6 +16,10 @@ import nibabel as nib
 import SimpleITK as sitk
 import PyQt5
 
+import scipy.ndimage
+import scipy.io as sio
+from scipy import signal
+
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QT_VERSION_STR, QLineF, QRegExp
 from PyQt5.QtGui import QImage, QPixmap, QPainterPath, QPainter, QPen, QColor, QIntValidator, QTransform, QBrush
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QFileDialog, QGroupBox,\
@@ -24,6 +28,15 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QFileDialog, QGroupBo
 from PyQt5.QtWidgets import QApplication
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+
+import matplotlib
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import matplotlib.cbook as cbook
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+matplotlib.use('TkAgg')
+
 
 __author__ = ""
 __version__ = ""
@@ -450,7 +463,9 @@ class QtImageViewer(QGraphicsView):
         print(thisSlicePlane.shape)
         print(thisSlicePlane[seedx,seedy])
         
-        segSliceOut = segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0)
+        segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0)
+        
+        
         
         thisSlicePlane = thisSlicePlane+32767*segSliceOut
         
@@ -475,8 +490,9 @@ class QtImageViewer(QGraphicsView):
         self.setSlice(self.__curSlice)
     
     
-    def segSliceBasedOnSeed(sliceIn,seedx,seedy,boneInd):
+    def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,boneInd):
     
+        print("Into Segmenter")
     
         # define 2D bounding box size
         boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
@@ -492,6 +508,9 @@ class QtImageViewer(QGraphicsView):
         newINP = sliceIn
 
         cSize = boneBound
+        
+        print(seedx)
+        print(seedy)
         
         # identify the search bounding box
         x0 = int(np.round(seedx-cSize/2))
@@ -511,6 +530,7 @@ class QtImageViewer(QGraphicsView):
         # crop the image to the bounding box
         cropSection = newINP[x0:x1,y0:y1]
         
+        print("Histogram Analysis")
         # compute histogram of signal within bounding box
         histogram, bin_edges = np.histogram(cropSection, bins=50, range=(0, np.amax(cropSection)))
         
@@ -547,26 +567,48 @@ class QtImageViewer(QGraphicsView):
                 #thresh = bin_edges[np.round(len(bin_edges)/2)]
                 thresh = bin_edges[26]
 
-        #print(thresh)
+        print(thresh)
+        
+        print("Segmenting")
+        
 
         cropSectionITK = sitk.GetImageFromArray(cropSection)
+        
+        print(newSeeds)
+
+        
         seg = sitk.ConnectedThreshold(cropSectionITK, seedList=newSeeds, lower=0, upper=thresh)
 
+
+        print("Growing done")
         segFilled = sitk.VotingBinaryHoleFilling(image1=seg,
                                                           radius=[2]*3,
                                                           majorityThreshold=1,
                                                           backgroundValue=0,
                                                           foregroundValue=1)
-        
+        print("Holes filled")
         vectorRadius=(1,1,1)
         kernel=sitk.sitkBall
         segCleaned = sitk.BinaryMorphologicalOpening(segFilled,vectorRadius,kernel)
         segNP = sitk.GetArrayFromImage(segCleaned)
 
+        sitk.WriteImage(segCleaned,'segImg.nii')
+        sitk.WriteImage(cropSectionITK,'cropImg.nii')
+
+                                                          
+        print("Edges cleaned")
+
         # re-pad to full slice
         # crop the image to the bounding box
         fullSegNP = np.zeros(newINP.shape)
         fullSegNP[x0:x1,y0:y1] = segNP
+
+
+
+
+
+        print("Returning")
+
 
         return fullSegNP
     
