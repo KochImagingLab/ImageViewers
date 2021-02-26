@@ -387,7 +387,7 @@ class QtImageViewer(QGraphicsView):
 #            pass
 #        self.HLine = self.scene.addLine(0, value, self.getImgWidth(), value, QPen(Qt.green))
 #
-#
+
 #    def getHorizVal(self):
 #        return self.__horiz
 #
@@ -437,66 +437,77 @@ class QtImageViewer(QGraphicsView):
         return dout.astype(np.uint8)
         
     
-    def segmentImageCallback(self,row,column):
+    def segmentImageCallback(self,row,column,thSet,procThree):
         
-        if self.__imgorientation == 1:
-            seedy = self.getImgHeight()-1-row
-            seedx = column
-            thisSlicePlane = self.__imageData[:,:,self.getCurSlice()]
-        elif self.__imgorientation == 2:
-            seedy = self.getImgHeight()-1-row
-            seedx = column
-            thisSlicePlane = self.__imageData[:,self.getCurSlice(),:]
-        elif self.__imgorientation == 3:
-            seedy = self.getImgHeight()-1-row
-            seedx = column
-            thisSlicePlane = self.__imageData[self.getCurSlice(),:,:]
-        else:
-            print("ERROR: Invlaid plane")
-        
-        #sitk_image = sitk.GetImageFromArray(thisSlice)
     
-        print(row)
-        print(column)
-        print(seedx)
-        print(seedy)
-        print(thisSlicePlane.shape)
-        print(thisSlicePlane[seedx,seedy])
+        if procThree == 2:   # 3D seed segmentation
         
-        segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0)
+            print('ThreeD Segmentation')
         
-        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
+        else:  # 2D seed segmentation
+
+            print('2D Segmentation')
+
+            if self.__imgorientation == 1:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                thisSlicePlane = self.__imageDataOrig[:,:,self.getCurSlice()]
+            elif self.__imgorientation == 2:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                thisSlicePlane = self.__imageDataOrig[:,self.getCurSlice(),:]
+            elif self.__imgorientation == 3:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                thisSlicePlane = self.__imageDataOrig[self.getCurSlice(),:,:]
+            else:
+                print("ERROR: Invlaid plane")
+                
+            sitk.WriteImage(sitk.GetImageFromArray(thisSlicePlane),'origImg.nii')
+            
+            #sitk_image = sitk.GetImageFromArray(thisSlice)
         
-        #thisSlicePlane = thisSlicePlane+32767*segSliceOut
-        sliceVis = np.where(segSliceOut > 0,32766,thisSlicePlane)
-        print(np.amax(thisSlicePlane))
-       
-        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis, axes=[1,0])),'fullSegVis.nii')
-       
-        #print(thisSlicePlane[seedx,seedy])
-        
-        #thisSlicePlane = 0
-        
-        #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
-       
-        if self.__imgorientation == 1:
-            self.__imageData[:,:,self.getCurSlice()] = sliceVis
-        elif self.__imgorientation == 2:
-            self.__imageData[:,self.getCurSlice(),:] = sliceVis
-        elif self.__imgorientation == 3:
-            self.__imageData[self.getCurSlice(),:,:] = sliceVis
-        else:
-            print("ERROR: Invlaid plane")
-       
-       
-        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__imageData, axes=[2,1,0])),'fullSegVis3D.nii')
-       
-        #self.__imageData[:,:,self.getCurSlice] = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[1,0])
+            print(row)
+            print(column)
+            print(seedx)
+            print(seedy)
+            print(thisSlicePlane.shape)
+            print(thisSlicePlane[seedx,seedy])
+            
+            segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0,thSet)
+            
+            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
+            
+            #thisSlicePlane = thisSlicePlane+32767*segSliceOut
+            sliceVis = np.where(segSliceOut > 0,32766,thisSlicePlane)
+            print(np.amax(thisSlicePlane))
+           
+            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis, axes=[1,0])),'fullSegVis.nii')
+           
+            #print(thisSlicePlane[seedx,seedy])
+            
+            #thisSlicePlane = 0
+            
+            #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
+           
+            if self.__imgorientation == 1:
+                self.__imageData[:,:,self.getCurSlice()] = sliceVis
+            elif self.__imgorientation == 2:
+                self.__imageData[:,self.getCurSlice(),:] = sliceVis
+            elif self.__imgorientation == 3:
+                self.__imageData[self.getCurSlice(),:,:] = sliceVis
+            else:
+                print("ERROR: Invlaid plane")
+           
+           
+            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__imageData, axes=[2,1,0])),'fullSegVis3D.nii')
+           
+            #self.__imageData[:,:,self.getCurSlice] = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[1,0])
         
         self.setSlice(self.__curSlice)
     
     
-    def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,boneInd):
+    def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,boneInd,thSet):
     
         print("Into Segmenter")
     
@@ -563,18 +574,18 @@ class QtImageViewer(QGraphicsView):
             
             #print(index)
             
-            thresh = (bin_edges[peak_indices[index+1]]-bin_edges[peak_indices[0]])/2
+            thresh = thSet*(bin_edges[peak_indices[index+1]]-bin_edges[peak_indices[0]])
         
         else:
             
             if(len(peakVals)==2):
             
-                thresh = (bin_edges[peak_indices[1]]-bin_edges[peak_indices[0]])/2
+                thresh = thSet*(bin_edges[peak_indices[1]]-bin_edges[peak_indices[0]])
 
             else:
                 print('WARNING: PEAKS NOT IDENTIFIED, THRESHOLD IS A ROUGH GUESS')
                 #thresh = bin_edges[np.round(len(bin_edges)/2)]
-                thresh = bin_edges[26]
+                thresh = thSet*bin_edges[26]
 
         print(thresh)
         
@@ -908,6 +919,7 @@ class QtImageViewer(QGraphicsView):
             self.__pixeldims = list(img.shape)
             self.__pixelspacing = list(img.header.get_zooms())
             self.__imageData = img.get_data()
+            self.__imageDataOrig = img.get_data().copy()
             self.__winlevel = self.__imageData.min()
             self.__winwidth = self.__imageData.max()-self.__imageData.min()  
             self.__imgorientation = 1 # x-y   

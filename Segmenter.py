@@ -26,10 +26,6 @@ from PyQt5.QtWidgets import QApplication
 #------------------------------------------------------------
 # Event handling
 #------------------------------------------------------------
-
-
-
-
         
 def parseArgs():
     #parse all of the passed in arguments
@@ -107,11 +103,18 @@ def btn1Click():
     
     openFileText1.setText(fileName)
     
-#def enableCrosshair():
-#    global viewer1
+def procThreeD():
+    global viewer1
 #    global horscrollbar
 #    global verscrollbar
-#    global crosshairsBox1
+    global threeDBox1
+    
+    global procThree
+    
+    procThree = threeDBox1.checkState()
+    
+    print('Into 3D Proc Changer')
+    print(procThree)
 #    global vlayout
 #    global chGroupBox
 #    global layout
@@ -143,13 +146,16 @@ def btn1Click():
     
 def handleLeftClick(x, y):
     global viewer1
+    global procThree
+    global thSet
     
     row = int(y)
     column = int(x)
     
     if( 0 <= row < viewer1.getImgHeight() and 0 <= column < viewer1.getImgWidth()):
         print('Button Clicked')
-        viewer1.segmentImageCallback(row,column)
+        print(thSet)
+        viewer1.segmentImageCallback(row,column,thSet,procThree)
         #print(viewer1.getImageMaximum())
         #horizScrollChange(row)
         #vertScrollChange(column)
@@ -160,7 +166,16 @@ def slicescrollbarChange(value):
     
     viewer1.setSlice(value)
     slicesTextbox.setText(str(value))     
+
+def threshscrollbarChange(value):
+    global viewer1
+    global thTextbox
+    global thSet
+
+    thSet = value/100.0
+    thTextbox.setText(str(value))
         
+
 def slicetextEditChange():
     global viewer1
     global slicesTextbox
@@ -329,19 +344,24 @@ def main(thisFile):
     global winlevelScrollbar
     global winwidthText
     global winlevelText  
-    #global horscrollbar
+    global threshscrollbar
     #global verscrollbar
     global openFileText1
-    #global crosshairsBox1
+    global threeDBox1
     global vlayout
     global chGroupBox
     global layout
     #global thruplaneBox
     global slicescrollbar
     global slicesTextbox
-    #global verTextbox
+    global thTextbox
+    global thSet
     #global horTextbox
     global window
+    global procThree
+    
+    procThree = 0
+    thSet = 0.5
     
  
     # Create the application.
@@ -369,24 +389,24 @@ def main(thisFile):
     openFileBtn1.setText('Open Image')
     openFileText1 = QLineEdit()
     openFileText1.setFixedSize(300,20)
-#    crosshairsBox1 = QCheckBox()
-#    crosshairsBox1.setText('Enable Crosshairs')
-#    crosshairsBox1.setCheckState(0)
+    threeDBox1 = QCheckBox()
+    threeDBox1.setText('3D Segmentation')
+    threeDBox1.setCheckState(0)
 #
      
 #    # -----------------------------------------------
-#    horLabel = QLabel()
-#    horLabel.setText('Horizontal Profile')
-#    horscrollbar = QScrollBar()
-#    horscrollbar.setOrientation(1)
-#    horTextbox = QLineEdit()
-#    horTextbox.setFixedSize(50, 20)
-#    horTextbox.setText(str(viewer1.getHorizVal()+1))
-#
-#    horscrollbar.setMinimum(1)
-#    horscrollbar.setMaximum(int(viewer1.getImgHeight()))
-#    horscrollbar.setValue(viewer1.getHorizVal())
-#    horscrollbar.setPageStep(1)
+    thLabel = QLabel()
+    thLabel.setText('Threshold Scale [0, 100%]')
+    threshscrollbar = QScrollBar()
+    threshscrollbar.setOrientation(1)
+    thTextbox = QLineEdit()
+    thTextbox.setFixedSize(50, 20)
+    thTextbox.setText(str(50))
+
+    threshscrollbar.setMinimum(0)
+    threshscrollbar.setMaximum(100)
+    threshscrollbar.setValue(50)
+    threshscrollbar.setPageStep(1)
 #
 #
 #    verLabel = QLabel()
@@ -409,8 +429,8 @@ def main(thisFile):
 #
 #    chGroupBox = QGroupBox("Crosshair Profile")
 #    layouts = QVBoxLayout()
-#    layouts.addWidget(horLabel)
-#    layouts.addWidget(horscrollbar)
+#    layouts.addWidget(thLabel)
+#    layouts.addWidget(threshscrollbar)
 #    layouts.addWidget(horTextbox)
 #    layouts.addWidget(verLabel)
 #    layouts.addWidget(verscrollbar)
@@ -482,13 +502,14 @@ def main(thisFile):
     # -----------------------------------------------
     openFileBtn1.clicked.connect(btn1Click)
     slicescrollbar.valueChanged.connect(slicescrollbarChange)
-    slicesTextbox.returnPressed.connect(slicetextEditChange)   
+    threshscrollbar.valueChanged.connect(threshscrollbarChange)
+    slicesTextbox.returnPressed.connect(slicetextEditChange)
     winlevelScrollbar.valueChanged.connect(wlscrollchange)
     winwidthScrollbar.valueChanged.connect(wwscrollchange)
     winlevelText.returnPressed.connect(wltextchange)
     winwidthText.returnPressed.connect(wwtextchange)  
     ortlist.currentIndexChanged.connect(ortChange)
-    #crosshairsBox1.toggled.connect(enableCrosshair)
+    threeDBox1.toggled.connect(procThreeD)
      
      
 #    horscrollbar.valueChanged.connect(horizScrollChange)
@@ -527,7 +548,14 @@ def main(thisFile):
     layouts.addWidget(slicesTextbox)
     layouts.addWidget(slicescrollbar)
     sliceGroupBox.setLayout(layouts)
-     
+    
+    threshGroupBox = QGroupBox("Threshold [0, 100%]")
+    layoutT = QVBoxLayout()
+    layoutT.addWidget(thTextbox)
+    layoutT.addWidget(threshscrollbar)
+    threshGroupBox.setLayout(layoutT)
+    
+    
     vlayout.addLayout(layoutop) 
     vlayout.addSpacing(20)
     vlayout.addWidget(displayGroupBox)
@@ -536,10 +564,12 @@ def main(thisFile):
     vlayout.addSpacing(10)
     vlayout.addWidget(ortlist)
     vlayout.addSpacing(10)
-    #vlayout.addWidget(crosshairsBox1)
+    vlayout.addWidget(threeDBox1)
+    vlayout.addSpacing(10)
+    vlayout.addWidget(threshGroupBox)
     vlayout.addStretch(1)
     vlayout.addSpacing(20)
-     
+    
     hlayout = QHBoxLayout()
     hlayout.addWidget(viewer1)
     hlayout.addLayout(vlayout)
