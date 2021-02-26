@@ -465,25 +465,31 @@ class QtImageViewer(QGraphicsView):
         
         segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0)
         
+        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
         
-        
-        thisSlicePlane = thisSlicePlane+32767*segSliceOut
-        
-        print(thisSlicePlane[seedx,seedy])
+        #thisSlicePlane = thisSlicePlane+32767*segSliceOut
+        sliceVis = np.where(segSliceOut > 0,32766,thisSlicePlane)
+        print(np.amax(thisSlicePlane))
+       
+        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis, axes=[1,0])),'fullSegVis.nii')
+       
+        #print(thisSlicePlane[seedx,seedy])
         
         #thisSlicePlane = 0
         
         #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
        
         if self.__imgorientation == 1:
-            self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
+            self.__imageData[:,:,self.getCurSlice()] = sliceVis
         elif self.__imgorientation == 2:
-            self.__imageData[:,self.getCurSlice(),:] = thisSlicePlane
+            self.__imageData[:,self.getCurSlice(),:] = sliceVis
         elif self.__imgorientation == 3:
-            self.__imageData[self.getCurSlice(),:,:] = thisSlicePlane
+            self.__imageData[self.getCurSlice(),:,:] = sliceVis
         else:
             print("ERROR: Invlaid plane")
        
+       
+        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__imageData, axes=[2,1,0])),'fullSegVis3D.nii')
        
         #self.__imageData[:,:,self.getCurSlice] = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[1,0])
         
@@ -518,12 +524,15 @@ class QtImageViewer(QGraphicsView):
         y0 = int(np.round(seedy-cSize/2))
         y1 = int(np.round(seedy+cSize/2-1))
 
+        print(x0)
+        print(y0)
+
         # reset the seeed indices within the bounding box
         newSS = np.zeros([2,2])   # x and y are reversed in ITK arrays --
-        newSS[0][0] = seedx - y0
-        newSS[0][1] = seedy - x0
-        newSS[1][0] = seedx - y0
-        newSS[1][1] = seedy - x0
+        newSS[0][0] = seedx - x0
+        newSS[0][1] = seedy - y0
+        newSS[1][0] = seedx - x0
+        newSS[1][1] = seedy - y0
 
         newSeeds = list(map(tuple,np.array(newSS, dtype='int').tolist()))
 
@@ -602,10 +611,6 @@ class QtImageViewer(QGraphicsView):
         # crop the image to the bounding box
         fullSegNP = np.zeros(newINP.shape)
         fullSegNP[x0:x1,y0:y1] = segNP
-
-
-
-
 
         print("Returning")
 
