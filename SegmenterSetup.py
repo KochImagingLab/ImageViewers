@@ -133,6 +133,8 @@ class QtImageViewer(QGraphicsView):
         # -------------------
         self.__fileName = None
         self.__imageData = None
+        self.__segData = None
+        self.__segBox = None
         self.__pixeldims = None
         self.__pixelspacing = None
         self.__imgorientation = 1
@@ -206,10 +208,17 @@ class QtImageViewer(QGraphicsView):
             self._pixmapHandle = self.scene.addPixmap(pixmap)
             
         self.setSceneRect(QRectF(pixmap.rect()))  # Set scene size to image size.
-#         self.setSliceOrientation(self.__imgorientation)
+        #self.setSliceOrientation(self.__imgorientation)
         self.updateViewer()
         
+
+    def setOrientation(self,orient):
         
+        self.__imgorientation = orient
+        
+        
+    
+
 #    def buildCrosshairPopup(self):
 #        self.ch = CrosshairWindow(self, width=5, height=4, dpi=100)
 #
@@ -474,16 +483,20 @@ class QtImageViewer(QGraphicsView):
             print(thisSlicePlane.shape)
             print(thisSlicePlane[seedx,seedy])
             
+            
+            segBox = drawSegBox2D(thisSlicePlane,seedx,seedy)
             segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0,thSet)
             
             sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
             
             #thisSlicePlane = thisSlicePlane+32767*segSliceOut
             sliceVis = np.where(segSliceOut > 0,32766,thisSlicePlane)
+            sliceVis2 = np.where(segBox > 0,32766,sliceVis)
+            
             print(np.amax(thisSlicePlane))
            
-            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis, axes=[1,0])),'fullSegVis.nii')
-           
+            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis2, axes=[1,0])),'fullSegVis.nii')
+            
             #print(thisSlicePlane[seedx,seedy])
             
             #thisSlicePlane = 0
@@ -491,21 +504,62 @@ class QtImageViewer(QGraphicsView):
             #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
            
             if self.__imgorientation == 1:
-                self.__imageData[:,:,self.getCurSlice()] = sliceVis
+                self.__imageData[:,:,self.getCurSlice()] = sliceVis2
+                self.__segData[:,:,self.getCurSlice()] = segSliceOut
+                self.__segBox[:,:,self.getCurSlice()] = segBox
             elif self.__imgorientation == 2:
-                self.__imageData[:,self.getCurSlice(),:] = sliceVis
+                self.__imageData[:,self.getCurSlice(),:] = sliceVis2
+                self.__segData[:,self.getCurSlice(),:] = segSliceOut
+                self.__segBox[:,self.getCurSlice(),:] = segBox
             elif self.__imgorientation == 3:
-                self.__imageData[self.getCurSlice(),:,:] = sliceVis
+                self.__imageData[self.getCurSlice(),:,:] = sliceVis2
+                self.__segData[self.getCurSlice(),:,:] = segSliceOut
+                self.__segBox[self.getCurSlice(),:,:] = segBox
             else:
                 print("ERROR: Invlaid plane")
            
+            print('Data saved')
            
-            sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__imageData, axes=[2,1,0])),'fullSegVis3D.nii')
+            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__imageData, axes=[2,1,0])),'fullSegVis3D.nii')
            
             #self.__imageData[:,:,self.getCurSlice] = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[1,0])
         
         self.setSlice(self.__curSlice)
     
+    
+    def drawSegBox2D(self,sliceIn,seedx,seedy):
+    
+        # define 2D bounding box size
+        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
+        if(boneInd==0):
+            boneBound = 50
+
+        if(boneInd==1):
+            boneBound = 50
+    
+        if(boneInd==2):
+            boneBound = 80
+
+        cSize = boneBound
+        
+        # identify the search bounding box
+        x0 = int(np.round(seedx-cSize/2))
+        x1 = int(np.round(seedx+cSize/2-1))
+        y0 = int(np.round(seedy-cSize/2))
+        y1 = int(np.round(seedy+cSize/2-1))
+
+        # crop the image to the bounding box
+        boxFill = np.zeros(sliceIn.shape)
+        boxFill[x0:x1,y0:y1] = 1
+        
+        boxITK = sitk.GetImageFromArray(boxSeg)
+        edge = sitk.CannyEdgeDetection(boxITK, lowerThreshold=0, upperThreshold=0.2,
+                                 variance=[1] * 3)
+                                 
+        boxSeg = sitk.GetArrayFromImage(edge)
+        
+        return boxSeg
+        
     
     def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,boneInd,thSet):
     
@@ -629,6 +683,14 @@ class QtImageViewer(QGraphicsView):
         return fullSegNP
     
     
+    def writeOutputFiles(self,outFile):
+    
+        niiFile = '%s_seg.nii' % outFile
+        pStr = 'Outputting segmentation to file %s' % niiFile
+        print(pStr)
+        
+        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segData, axes=[2,1,0])),niiFile)
+     
     def resampleImage(self, spacing=None,fill_value=0):
         
         sitk_image = sitk.GetImageFromArray(self.__imageData)
@@ -902,6 +964,8 @@ class QtImageViewer(QGraphicsView):
         self.__pixeldims = image.GetSize()
         self.__pixelspacing = image.GetSpacing()
         self.__imageData = sitk.GetArrayFromImage(image) #np.transpose(sitk.GetArrayFromImage(image), axes=[2,1,0])
+        self.__segData = np.zeros(self.__imageData.shape)
+        self.__segBox = np.zeros(self.__imageData.shape)
         self.__winlevel = self.__imageData.min()
         self.__winwidth = self.__imageData.max()-self.__imageData.min()         
         self.__imgorientation = 1 # x-y
@@ -920,6 +984,7 @@ class QtImageViewer(QGraphicsView):
             self.__pixelspacing = list(img.header.get_zooms())
             self.__imageData = img.get_data()
             self.__imageDataOrig = img.get_data().copy()
+            self.__segData = np.zeros(self.__imageData.shape)
             self.__winlevel = self.__imageData.min()
             self.__winwidth = self.__imageData.max()-self.__imageData.min()  
             self.__imgorientation = 1 # x-y   

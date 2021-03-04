@@ -30,9 +30,13 @@ from PyQt5.QtWidgets import QApplication
 def parseArgs():
     #parse all of the passed in arguments
     global args
-    parser = argparse.ArgumentParser(description='Input parameters for where to copy database records.')
+    parser = argparse.ArgumentParser(description='Input parameters')
     parser.add_argument('-n', '--niiFile', help='Path to nifti file', default='') 
-    
+
+    parser.add_argument('-o', '--outFile', help='Path to output file prefix', default='')
+
+    parser.add_argument('-p', '--inPlane', help='Initial Scan Plane [1,2,3]', default='')
+
     args = parser.parse_args()
     
     return
@@ -260,6 +264,7 @@ def ortChange(value):
   #  global crosshairsBox1
     
     viewer1.setSliceOrientation(value+1)
+    print('OrtChange Hit')
     if (viewer1._pixmapHandle is not None): 
         slicescrollbar.setMaximum(viewer1.getSliceMax())
         slicescrollbar.setValue(viewer1.getCurSlice())
@@ -338,7 +343,7 @@ def ortChange(value):
 #------------------------------------------------------------
         
 
-def main(thisFile):
+def main(thisFile,outFile,inPlane):
     global viewer1
     global winwidthScrollbar
     global winlevelScrollbar
@@ -498,6 +503,9 @@ def main(thisFile):
     ortlist.addItem('Dim 1 vs Dim 2')
     ortlist.addItem('Dim 1 vs Dim 3')
     ortlist.addItem('Dim 2 vs Dim 3')
+    ortlist.setCurrentIndex(int(inPlane))
+    
+    viewer1.setSliceOrientation(int(inPlane)+1)
      
     # -----------------------------------------------
     openFileBtn1.clicked.connect(btn1Click)
@@ -510,6 +518,8 @@ def main(thisFile):
     winwidthText.returnPressed.connect(wwtextchange)  
     ortlist.currentIndexChanged.connect(ortChange)
     threeDBox1.toggled.connect(procThreeD)
+    
+    ortChange(int(inPlane))
      
      
 #    horscrollbar.valueChanged.connect(horizScrollChange)
@@ -579,6 +589,11 @@ def main(thisFile):
     window.show()
      
     app.exec_()
+    
+    viewer1.writeOutputFiles(outFile)
+    
+    print('Exiting')
+    
     app.quit()
     
 #MAIN
@@ -587,4 +602,4 @@ if __name__ == '__main__':
     global args
     parseArgs()
     
-    main(args.niiFile)
+    main(args.niiFile,args.outFile,args.inPlane)
