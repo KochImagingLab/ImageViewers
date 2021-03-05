@@ -484,7 +484,7 @@ class QtImageViewer(QGraphicsView):
             print(thisSlicePlane[seedx,seedy])
             
             
-            segBox = drawSegBox2D(thisSlicePlane,seedx,seedy)
+            segBox = self.drawSegBox2D(thisSlicePlane,seedx,seedy,0)
             segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0,thSet)
             
             sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
@@ -527,7 +527,7 @@ class QtImageViewer(QGraphicsView):
         self.setSlice(self.__curSlice)
     
     
-    def drawSegBox2D(self,sliceIn,seedx,seedy):
+    def drawSegBox2D(self,sliceIn,seedx,seedy,boneInd):
     
         # define 2D bounding box size
         boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
@@ -552,7 +552,7 @@ class QtImageViewer(QGraphicsView):
         boxFill = np.zeros(sliceIn.shape)
         boxFill[x0:x1,y0:y1] = 1
         
-        boxITK = sitk.GetImageFromArray(boxSeg)
+        boxITK = sitk.GetImageFromArray(boxFill)
         edge = sitk.CannyEdgeDetection(boxITK, lowerThreshold=0, upperThreshold=0.2,
                                  variance=[1] * 3)
                                  
@@ -985,6 +985,7 @@ class QtImageViewer(QGraphicsView):
             self.__imageData = img.get_data()
             self.__imageDataOrig = img.get_data().copy()
             self.__segData = np.zeros(self.__imageData.shape)
+            self.__segBox = np.zeros(self.__imageData.shape)
             self.__winlevel = self.__imageData.min()
             self.__winwidth = self.__imageData.max()-self.__imageData.min()  
             self.__imgorientation = 1 # x-y   
