@@ -135,6 +135,7 @@ class QtImageViewer(QGraphicsView):
         self.__imageData = None
         self.__segData = None
         self.__segBox = None
+        self.__segInfo = None
         self.__pixeldims = None
         self.__pixelspacing = None
         self.__imgorientation = 1
@@ -476,6 +477,8 @@ class QtImageViewer(QGraphicsView):
             
             #sitk_image = sitk.GetImageFromArray(thisSlice)
         
+            #self.__segInfo[
+        
             print(row)
             print(column)
             print(seedx)
@@ -690,6 +693,13 @@ class QtImageViewer(QGraphicsView):
         print(pStr)
         
         sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segData, axes=[2,1,0])),niiFile)
+       
+        niiFile = '%s_segBox.nii' % outFile
+        pStr = 'Outputting segmentation to file %s' % niiFile
+        print(pStr)
+       
+        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segBox, axes=[2,1,0])),niiFile)
+     
      
     def resampleImage(self, spacing=None,fill_value=0):
         
@@ -966,6 +976,9 @@ class QtImageViewer(QGraphicsView):
         self.__imageData = sitk.GetArrayFromImage(image) #np.transpose(sitk.GetArrayFromImage(image), axes=[2,1,0])
         self.__segData = np.zeros(self.__imageData.shape)
         self.__segBox = np.zeros(self.__imageData.shape)
+        inShape = self.__imageData.shape
+        self.__segInfo = np.zeros((4,inShape[2]))
+        
         self.__winlevel = self.__imageData.min()
         self.__winwidth = self.__imageData.max()-self.__imageData.min()         
         self.__imgorientation = 1 # x-y
@@ -986,6 +999,8 @@ class QtImageViewer(QGraphicsView):
             self.__imageDataOrig = img.get_data().copy()
             self.__segData = np.zeros(self.__imageData.shape)
             self.__segBox = np.zeros(self.__imageData.shape)
+            inShape = self.__imageData.shape
+            self.__segInfo = np.zeros((4,inShape[2]))
             self.__winlevel = self.__imageData.min()
             self.__winwidth = self.__imageData.max()-self.__imageData.min()  
             self.__imgorientation = 1 # x-y   
