@@ -506,6 +506,11 @@ class QtImageViewer(QGraphicsView):
             
             #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
            
+            self.__segInfo[0,self.getCurSlice()] = seedx
+            self.__segInfo[1,self.getCurSlice()] = seedy
+            self.__segInfo[2,self.getCurSlice()] = 0
+            self.__segInfo[3,self.getCurSlice()] = thSet
+           
             if self.__imgorientation == 1:
                 self.__imageData[:,:,self.getCurSlice()] = sliceVis2
                 self.__segData[:,:,self.getCurSlice()] = segSliceOut
@@ -699,6 +704,12 @@ class QtImageViewer(QGraphicsView):
         print(pStr)
        
         sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segBox, axes=[2,1,0])),niiFile)
+    
+    
+        infoFile = '%s_segInfo.npy' % outFile
+        pStr = 'Outputting info to file %s' % infoFile
+        print(pStr)
+        np.save(infoFile,self.__segInfo)
      
      
     def resampleImage(self, spacing=None,fill_value=0):
@@ -1001,6 +1012,7 @@ class QtImageViewer(QGraphicsView):
             self.__segBox = np.zeros(self.__imageData.shape)
             inShape = self.__imageData.shape
             self.__segInfo = np.zeros((4,inShape[2]))
+            
             self.__winlevel = self.__imageData.min()
             self.__winwidth = self.__imageData.max()-self.__imageData.min()  
             self.__imgorientation = 1 # x-y   
