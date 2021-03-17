@@ -456,6 +456,69 @@ class QtImageViewer(QGraphicsView):
         
             print('ThreeD Segmentation')
         
+            if self.__imgorientation == 1:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                seedz = self.getCurSlice()
+            elif self.__imgorientation == 2:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                seedz = self.getCurSlice()
+            elif self.__imgorientation == 3:
+                seedy = self.getImgHeight()-1-row
+                seedx = column
+                seedz = self.getCurSlice()
+            else:
+                print("ERROR: Invlaid plane")
+            
+            #sitk.WriteImage(sitk.GetImageFromArray(thisSlicePlane),'origImg.nii')
+            
+            #sitk_image = sitk.GetImageFromArray(thisSlice)
+        
+            #self.__segInfo[
+        
+            #print(row)
+            #print(column)
+            #print(seedx)
+            #print(seedy)
+            #print(thisSlicePlane.shape)
+            #print(thisSlicePlane[seedx,seedy])
+
+            thisVol = self.__imageDataOrig
+            
+            
+            segBox = self.drawSegBox3D(thisVol,seedx,seedy,seedz)
+            segVolOut = self.segVolBasedOnSeed(thisVol,seedx,seedy,thSet)
+            
+            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
+            
+            #thisSlicePlane = thisSlicePlane+32767*segSliceOut
+            volVis = np.where(segVolOut > 0,32766,thisVol)
+            volVis2 = np.where(segBox > 0,32766,volVis)
+            
+            #print(np.amax(thisSlicePlane))
+           
+            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(sliceVis2, axes=[1,0])),'fullSegVis.nii')
+            
+            #print(thisSlicePlane[seedx,seedy])
+            
+            #thisSlicePlane = 0
+            
+            #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
+
+            self.__segInfo = self.__segInfo*0.0
+            self.__segInfo[0,self.getCurSlice()] = seedx
+            self.__segInfo[1,self.getCurSlice()] = seedy
+            self.__segInfo[2,self.getCurSlice()] = self.__bboxIP
+            self.__segInfo[3,self.getCurSlice()] = self.__bboxSL
+            self.__segInfo[4,self.getCurSlice()] = thSet
+
+            self.__imageData = volVis2
+            self.__segData = segVolOut
+            self.__segBox = segBox
+
+            print('Data saved')
+        
         else:  # 2D seed segmentation
 
             #print('2D Segmentation')
@@ -489,8 +552,8 @@ class QtImageViewer(QGraphicsView):
             #print(thisSlicePlane[seedx,seedy])
             
             
-            segBox = self.drawSegBox2D(thisSlicePlane,seedx,seedy,0)
-            segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,0,thSet)
+            segBox = self.drawSegBox2D(thisSlicePlane,seedx,seedy)
+            segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,thSet)
             
             #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
             
@@ -538,7 +601,7 @@ class QtImageViewer(QGraphicsView):
         self.setSlice(self.__curSlice)
     
     
-    def drawSegBox2D(self,sliceIn,seedx,seedy,boneInd):
+    def drawSegBox2D(self,sliceIn,seedx,seedy):
     
         # define 2D bounding box size
         #boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
@@ -577,35 +640,113 @@ class QtImageViewer(QGraphicsView):
         boxSeg = sitk.GetArrayFromImage(edge)
         
         return boxSeg
+    
+    def drawSegBox3D(self,volIn,seedx,seedy,seedz):
+
+        volShape = volIn.shape
+        
+        if self.__imgorientation == 1:
+            self.__imageData[:,:,self.getCurSlice()] = sliceVis2
+            self.__segData[:,:,self.getCurSlice()] = segSliceOut
+            self.__segBox[:,:,self.getCurSlice()] = segBox
+            
+            cSizeX = np.round(self.__bboxIP*volShape[0])
+            cSizeY = np.round(self.__bboxIP*volShape[1])
+            cSizeZ = np.round(self.__bboxSL*volShape[2])
+
+        elif self.__imgorientation == 2:
+
+            cSizeX = np.round(self.__bboxIP*volShape[0])
+            cSizeY = np.round(self.__bboxIP*volShape[2])
+            cSizeZ = np.round(self.__bboxSL*volShape[1])
+
+        elif self.__imgorientation == 3:
+
+            cSizeX = np.round(self.__bboxIP*volShape[1])
+            cSizeY = np.round(self.__bboxIP*volShape[2])
+            cSizeZ = np.round(self.__bboxSL*volShape[0])
+
+        else:
+            
+            print("ERROR: Invlaid plane")
+           
+
+        #print(cSizeX)
+        #print(self.__bboxIP)
+        
+        # identify the search bounding box
+        x0 = int(np.round(seedx-cSizeX/2))
+        x1 = int(np.round(seedx+cSizeX/2-1))
+        y0 = int(np.round(seedy-cSizeY/2))
+        y1 = int(np.round(seedy+cSizeY/2-1))
+        z0 = int(np.round(seedz-cSizeZ/2))
+        z1 = int(np.round(seedz+cSizeZ/2-1))
+
+        # crop the image to the bounding box
+        boxFill = np.zeros(volIn.shape)
+
+        if self.__imgorientation == 1:
+            boxFill[x0:x1,y0:y1,z0:z1] = 1
+        elif self.__imgorientation == 2:
+            boxFill[x0:x1,z0:z1,y0:y1] = 1
+        elif self.__imgorientation == 3:
+            boxFill[y0:y1,z0:z1,x0:x1] = 1
+        else:
+            print("ERROR: Invlaid plane")
+
+        boxITK = sitk.GetImageFromArray(boxFill)
+        edge = sitk.CannyEdgeDetection(boxITK, lowerThreshold=0, upperThreshold=0.2,
+                                 variance=[1] * 3)
+                                 
+        boxSeg = sitk.GetArrayFromImage(edge)
+        
+        return boxSeg
         
     
-    def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,boneInd,thSet):
+    
+    ##### KMK working --- need to build 3D seg function now
+    
+    def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,thSet):
     
         #print("Into Segmenter")
     
         # define 2D bounding box size
-        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
-        if(boneInd==0):
-            boneBound = 50
-
-        if(boneInd==1):
-            boneBound = 50
-    
-        if(boneInd==2):
-            boneBound = 80
+#        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
+#        if(boneInd==0):
+#            boneBound = 50
+#
+#        if(boneInd==1):
+#            boneBound = 50
+#
+#        if(boneInd==2):
+#            boneBound = 80
 
         newINP = sliceIn
 
-        cSize = boneBound
+#        cSize = boneBound
+#
+#        #print(seedx)
+#        #print(seedy)
+#
+#        # identify the search bounding box
+#        x0 = int(np.round(seedx-cSize/2))
+#        x1 = int(np.round(seedx+cSize/2-1))
+#        y0 = int(np.round(seedy-cSize/2))
+#        y1 = int(np.round(seedy+cSize/2-1))
+
+        sliceShape = sliceIn.shape
         
-        #print(seedx)
-        #print(seedy)
+        cSizeX = np.round(self.__bboxIP*sliceShape[0])
+        cSizeY = np.round(self.__bboxIP*sliceShape[1])
+        
+        #print(cSizeX)
+        #print(self.__bboxIP)
         
         # identify the search bounding box
-        x0 = int(np.round(seedx-cSize/2))
-        x1 = int(np.round(seedx+cSize/2-1))
-        y0 = int(np.round(seedy-cSize/2))
-        y1 = int(np.round(seedy+cSize/2-1))
+        x0 = int(np.round(seedx-cSizeX/2))
+        x1 = int(np.round(seedx+cSizeX/2-1))
+        y0 = int(np.round(seedy-cSizeY/2))
+        y1 = int(np.round(seedy+cSizeY/2-1))
 
         #print(x0)
         #print(y0)
