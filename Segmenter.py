@@ -117,8 +117,8 @@ def procThreeD():
     
     procThree = threeDBox1.checkState()
     
-    print('Into 3D Proc Changer')
-    print(procThree)
+    #print('Into 3D Proc Changer')
+    #print(procThree)
 #    global vlayout
 #    global chGroupBox
 #    global layout
@@ -152,13 +152,15 @@ def handleLeftClick(x, y):
     global viewer1
     global procThree
     global thSet
+    global bboxSI
+    global bboxSL
     
     row = int(y)
     column = int(x)
     
     if( 0 <= row < viewer1.getImgHeight() and 0 <= column < viewer1.getImgWidth()):
-        print('Button Clicked')
-        print(thSet)
+        #print('Button Clicked')
+        #print(thSet)
         viewer1.segmentImageCallback(row,column,thSet,procThree)
         #print(viewer1.getImageMaximum())
         #horizScrollChange(row)
@@ -192,7 +194,33 @@ def slicetextEditChange():
         value = viewer1.getSliceMax()
         
     viewer1.setSlice(int(value))
-    slicescrollbar.setValue(int(value))   
+    slicescrollbar.setValue(int(value))
+    
+def boundBoxEditChange():
+    global viewer1
+    global boundSLTextbox
+    global bboxSL
+    global bboxSI
+    
+    print('New Bounding Box Size Registered')
+    
+    value = boundIPTextbox.text()
+    if float(value)<0:
+        value = 1.0
+    elif float(value)>1:
+        value = 1.0
+        
+    
+    value2 = boundSLTextbox.text()
+    if float(value2)<0:
+        value2 = 1
+    elif float(value2)>1:
+        value2 = 1
+
+    viewer1.setbbox(float(value),float(value2))
+
+   # viewer1.setSlice(int(value))
+   # slicescrollbar.setValue(int(value))
     
 def wlscrollchange(value):
     global wlMin
@@ -263,12 +291,23 @@ def ortChange(value):
   #  global horTextbox
   #  global crosshairsBox1
     
+    
+    #print('OrtChange Hit 0')
     viewer1.setSliceOrientation(value+1)
-    print('OrtChange Hit')
-    if (viewer1._pixmapHandle is not None): 
+    
+    #self.__curSlice = self.__pixeldims[2]//2
+    #self.setSlice(self.__curSlice)
+    #print(viewer1.getCurSlice())
+    #print('OrtChange Hit 1')
+    if (viewer1._pixmapHandle is not None):
+        #print('resetting slice info')
+        #print(viewer1.getCurSlice())
         slicescrollbar.setMaximum(viewer1.getSliceMax())
+        viewer1.setSliceOrientation(value+1)
+        #print(viewer1.getCurSlice())
         slicescrollbar.setValue(viewer1.getCurSlice())
-        slicesTextbox.setText(str(viewer1.getCurSlice()))   
+        slicesTextbox.setText(str(viewer1.getCurSlice()))
+        #print('OrtChange Hit 2')
         
 #        verscrollbar.setMaximum(int(viewer1.getImgWidth()))
 #
@@ -360,7 +399,16 @@ def main(thisFile,outFile,inPlane):
     global slicescrollbar
     global slicesTextbox
     global thTextbox
+    global boundIPTextbox
+    global boundSLTextbox
+    global bboxIP
+    global bboxSL
+    
+    bboxIP = 0.25
+    bboxSL = 0.25
+
     global thSet
+
     #global horTextbox
     global window
     global procThree
@@ -389,11 +437,11 @@ def main(thisFile,outFile,inPlane):
     viewer1.leftMouseButtonPressed.connect(handleLeftClick)
      
     # -----------------------------------------------
-    openFileBtn1 = QPushButton()
-    openFileBtn1.setFixedWidth(120)
-    openFileBtn1.setText('Open Image')
-    openFileText1 = QLineEdit()
-    openFileText1.setFixedSize(300,20)
+    #openFileBtn1 = QPushButton()
+    #openFileBtn1.setFixedWidth(120)
+    #openFileBtn1.setText('Open Image')
+    #openFileText1 = QLineEdit()
+    #openFileText1.setFixedSize(300,20)
     threeDBox1 = QCheckBox()
     threeDBox1.setText('3D Segmentation')
     threeDBox1.setCheckState(0)
@@ -443,7 +491,26 @@ def main(thisFile,outFile,inPlane):
 #    layouts.addWidget(thruplaneBox)
 #    chGroupBox.setLayout(layouts)
 #
+
+
+
+    boundIPLabel = QLabel()
+    boundIPLabel.setText('In-Plane Bound [% of FOV]')
+
+    boundSLLabel = QLabel()
+    boundSLLabel.setText('3D-Seg Slice Bound [% of Num Slices]')
+
+    boundIPTextbox = QLineEdit()
+    boundIPTextbox.setFixedSize(50, 20)
+    boundIPTextbox.setText(str(0.25))
+    
+    boundSLTextbox = QLineEdit()
+    boundSLTextbox.setFixedSize(50, 20)
+    boundSLTextbox.setText(str(0.25))
+
     # -----------------------------------------------
+    
+    
     slicesTextbox = QLineEdit()
     slicesTextbox.setFixedSize(50, 20)
     slicescrollbar = QScrollBar()
@@ -508,10 +575,12 @@ def main(thisFile,outFile,inPlane):
     viewer1.setSliceOrientation(int(inPlane)+1)
      
     # -----------------------------------------------
-    openFileBtn1.clicked.connect(btn1Click)
+    #openFileBtn1.clicked.connect(btn1Click)
     slicescrollbar.valueChanged.connect(slicescrollbarChange)
     threshscrollbar.valueChanged.connect(threshscrollbarChange)
     slicesTextbox.returnPressed.connect(slicetextEditChange)
+    boundIPTextbox.returnPressed.connect(boundBoxEditChange)
+    boundIPTextbox.returnPressed.connect(boundBoxEditChange)
     winlevelScrollbar.valueChanged.connect(wlscrollchange)
     winwidthScrollbar.valueChanged.connect(wwscrollchange)
     winlevelText.returnPressed.connect(wltextchange)
@@ -535,11 +604,11 @@ def main(thisFile,outFile,inPlane):
     # Do layout 
     # -------------------------------------------------    
     vlayout = QVBoxLayout()
-    layoutop = QGridLayout()  
-    layoutop.setColumnStretch(1, 3)
-    layoutop.setColumnStretch(2, 3)     
-    layoutop.addWidget(openFileBtn1, 0,0)
-    layoutop.addWidget(openFileText1, 1,0)
+    #layoutop = QGridLayout()
+    #layoutop.setColumnStretch(1, 3)
+    #layoutop.setColumnStretch(2, 3)
+    #layoutop.addWidget(openFileBtn1, 0,0)
+    #layoutop.addWidget(openFileText1, 1,0)
      
     displayGroupBox = QGroupBox("Display")
     layout = QGridLayout()
@@ -564,10 +633,22 @@ def main(thisFile,outFile,inPlane):
     layoutT.addWidget(thTextbox)
     layoutT.addWidget(threshscrollbar)
     threshGroupBox.setLayout(layoutT)
+
+    boundGroupBox = QGroupBox("Bounding Box Sizes")
+    #layoutB = QVBoxLayout()
+    layoutB = QGridLayout()
+    layoutB.setColumnStretch(1, 4)
+    layoutB.setColumnStretch(2, 4)
+    layoutB.addWidget(boundIPTextbox,0,0)
+    layoutB.addWidget(boundIPLabel, 0, 1)
+    layoutB.addWidget(boundSLTextbox,1,0)
+    layoutB.addWidget(boundSLLabel,1,1)
+    boundGroupBox.setLayout(layoutB)
+
+
     
-    
-    vlayout.addLayout(layoutop) 
-    vlayout.addSpacing(20)
+    #vlayout.addLayout(layoutop)
+    #vlayout.addSpacing(20)
     vlayout.addWidget(displayGroupBox)
     vlayout.addSpacing(10)
     vlayout.addWidget(sliceGroupBox)
@@ -577,6 +658,8 @@ def main(thisFile,outFile,inPlane):
     vlayout.addWidget(threeDBox1)
     vlayout.addSpacing(10)
     vlayout.addWidget(threshGroupBox)
+    vlayout.addSpacing(10)
+    vlayout.addWidget(boundGroupBox)
     vlayout.addStretch(1)
     vlayout.addSpacing(20)
     
