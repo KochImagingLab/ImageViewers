@@ -35,7 +35,10 @@ def parseArgs():
 
     parser.add_argument('-o', '--outFile', help='Path to output file prefix', default='')
 
-    parser.add_argument('-p', '--inPlane', help='Initial Scan Plane [1,2,3]', default='')
+    parser.add_argument('-iF', '--ipFact', help='In Plane Resolution Increase Factor', default='1.0')
+
+    parser.add_argument('-sF', '--slFact', help='Through Plane Resolution Increase Factor', default='1.0')
+
 
     args = parser.parse_args()
     
@@ -382,7 +385,7 @@ def ortChange(value):
 #------------------------------------------------------------
         
 
-def main(thisFile,outFile,inPlane):
+def main(thisFile,outFile,ipFact,slFact):
     global viewer1
     global winwidthScrollbar
     global winlevelScrollbar
@@ -431,7 +434,7 @@ def main(thisFile,outFile,inPlane):
     viewer1.setFocus()
      
     if(thisFile != ''):
-        viewer1.loadNIFTI(thisFile)
+        viewer1.loadNIFTI(thisFile,float(ipFact),float(slFact))
  
     # Handle left mouse clicks with custom slot.
     viewer1.leftMouseButtonPressed.connect(handleLeftClick)
@@ -570,9 +573,9 @@ def main(thisFile,outFile,inPlane):
     ortlist.addItem('Dim 1 vs Dim 2')
     ortlist.addItem('Dim 1 vs Dim 3')
     ortlist.addItem('Dim 2 vs Dim 3')
-    ortlist.setCurrentIndex(int(inPlane))
+    ortlist.setCurrentIndex(1)
     
-    viewer1.setSliceOrientation(int(inPlane)+1)
+    viewer1.setSliceOrientation(2)
      
     # -----------------------------------------------
     #openFileBtn1.clicked.connect(btn1Click)
@@ -580,7 +583,7 @@ def main(thisFile,outFile,inPlane):
     threshscrollbar.valueChanged.connect(threshscrollbarChange)
     slicesTextbox.returnPressed.connect(slicetextEditChange)
     boundIPTextbox.returnPressed.connect(boundBoxEditChange)
-    boundIPTextbox.returnPressed.connect(boundBoxEditChange)
+    boundSLTextbox.returnPressed.connect(boundBoxEditChange)
     winlevelScrollbar.valueChanged.connect(wlscrollchange)
     winwidthScrollbar.valueChanged.connect(wwscrollchange)
     winlevelText.returnPressed.connect(wltextchange)
@@ -588,7 +591,7 @@ def main(thisFile,outFile,inPlane):
     ortlist.currentIndexChanged.connect(ortChange)
     threeDBox1.toggled.connect(procThreeD)
     
-    ortChange(int(inPlane))
+    ortChange(1)
      
      
 #    horscrollbar.valueChanged.connect(horizScrollChange)
@@ -685,4 +688,4 @@ if __name__ == '__main__':
     global args
     parseArgs()
     
-    main(args.niiFile,args.outFile,args.inPlane)
+    main(args.niiFile,args.outFile,args.ipFact,args.slFact)

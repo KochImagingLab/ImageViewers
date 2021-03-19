@@ -456,20 +456,15 @@ class QtImageViewer(QGraphicsView):
         
             print('ThreeD Segmentation')
         
-            if self.__imgorientation == 1:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                seedz = self.getCurSlice()
-            elif self.__imgorientation == 2:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                seedz = self.getCurSlice()
-            elif self.__imgorientation == 3:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                seedz = self.getCurSlice()
-            else:
-                print("ERROR: Invlaid plane")
+            seedx = self.getImgHeight()-1-row
+            seedz = column
+            seedy = self.getCurSlice()
+            
+            print('Shape and Seeds')
+            print(self.__imageData.shape)
+            print(seedx)
+            print(seedy)
+            print(seedz)
             
             #sitk.WriteImage(sitk.GetImageFromArray(thisSlicePlane),'origImg.nii')
             
@@ -488,7 +483,7 @@ class QtImageViewer(QGraphicsView):
             
             
             segBox = self.drawSegBox3D(thisVol,seedx,seedy,seedz)
-            segVolOut = self.segVolBasedOnSeed(thisVol,seedx,seedy,thSet)
+            segVolOut = self.segVolBasedOnSeed(thisVol,seedx,seedy,seedz,thSet)
             
             #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
             
@@ -523,20 +518,10 @@ class QtImageViewer(QGraphicsView):
 
             #print('2D Segmentation')
 
-            if self.__imgorientation == 1:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                thisSlicePlane = self.__imageDataOrig[:,:,self.getCurSlice()]
-            elif self.__imgorientation == 2:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                thisSlicePlane = self.__imageDataOrig[:,self.getCurSlice(),:]
-            elif self.__imgorientation == 3:
-                seedy = self.getImgHeight()-1-row
-                seedx = column
-                thisSlicePlane = self.__imageDataOrig[self.getCurSlice(),:,:]
-            else:
-                print("ERROR: Invlaid plane")
+          
+            seedy = self.getImgHeight()-1-row
+            seedx = column
+            thisSlicePlane = self.__imageDataOrig[:,self.getCurSlice(),:]
                 
             #sitk.WriteImage(sitk.GetImageFromArray(thisSlicePlane),'origImg.nii')
             
@@ -577,20 +562,9 @@ class QtImageViewer(QGraphicsView):
             self.__segInfo[3,self.getCurSlice()] = self.__bboxSL
             self.__segInfo[4,self.getCurSlice()] = thSet
            
-            if self.__imgorientation == 1:
-                self.__imageData[:,:,self.getCurSlice()] = sliceVis2
-                self.__segData[:,:,self.getCurSlice()] = segSliceOut
-                self.__segBox[:,:,self.getCurSlice()] = segBox
-            elif self.__imgorientation == 2:
-                self.__imageData[:,self.getCurSlice(),:] = sliceVis2
-                self.__segData[:,self.getCurSlice(),:] = segSliceOut
-                self.__segBox[:,self.getCurSlice(),:] = segBox
-            elif self.__imgorientation == 3:
-                self.__imageData[self.getCurSlice(),:,:] = sliceVis2
-                self.__segData[self.getCurSlice(),:,:] = segSliceOut
-                self.__segBox[self.getCurSlice(),:,:] = segBox
-            else:
-                print("ERROR: Invlaid plane")
+            self.__imageData[:,self.getCurSlice(),:] = sliceVis2
+            self.__segData[:,self.getCurSlice(),:] = segSliceOut
+            self.__segBox[:,self.getCurSlice(),:] = segBox
            
             print('Data saved')
            
@@ -645,31 +619,9 @@ class QtImageViewer(QGraphicsView):
 
         volShape = volIn.shape
         
-        if self.__imgorientation == 1:
-            self.__imageData[:,:,self.getCurSlice()] = sliceVis2
-            self.__segData[:,:,self.getCurSlice()] = segSliceOut
-            self.__segBox[:,:,self.getCurSlice()] = segBox
-            
-            cSizeX = np.round(self.__bboxIP*volShape[0])
-            cSizeY = np.round(self.__bboxIP*volShape[1])
-            cSizeZ = np.round(self.__bboxSL*volShape[2])
-
-        elif self.__imgorientation == 2:
-
-            cSizeX = np.round(self.__bboxIP*volShape[0])
-            cSizeY = np.round(self.__bboxIP*volShape[2])
-            cSizeZ = np.round(self.__bboxSL*volShape[1])
-
-        elif self.__imgorientation == 3:
-
-            cSizeX = np.round(self.__bboxIP*volShape[1])
-            cSizeY = np.round(self.__bboxIP*volShape[2])
-            cSizeZ = np.round(self.__bboxSL*volShape[0])
-
-        else:
-            
-            print("ERROR: Invlaid plane")
-           
+        cSizeX = np.round(self.__bboxIP*volShape[0])
+        cSizeY = np.round(self.__bboxSL*volShape[1])
+        cSizeZ = np.round(self.__bboxIP*volShape[2])
 
         #print(cSizeX)
         #print(self.__bboxIP)
@@ -681,19 +633,31 @@ class QtImageViewer(QGraphicsView):
         y1 = int(np.round(seedy+cSizeY/2-1))
         z0 = int(np.round(seedz-cSizeZ/2))
         z1 = int(np.round(seedz+cSizeZ/2-1))
+        
+        if(x0 < 0):
+            x0 = 0
+
+        if(y0 < 0):
+            y0 = 0
+
+        if(z0 < 0):
+            z0 = 0
+
+        if(x1 > volShape[2]-1):
+            x1 = volShape[2]-1
+
+        if(y1 > volShape[1]-1):
+            y1 = volShape[1]-1
+
+        if(z1 > volShape[0]-1):
+            z1 = volShape[0]-1
+        
 
         # crop the image to the bounding box
         boxFill = np.zeros(volIn.shape)
 
-        if self.__imgorientation == 1:
-            boxFill[x0:x1,y0:y1,z0:z1] = 1
-        elif self.__imgorientation == 2:
-            boxFill[x0:x1,z0:z1,y0:y1] = 1
-        elif self.__imgorientation == 3:
-            boxFill[y0:y1,z0:z1,x0:x1] = 1
-        else:
-            print("ERROR: Invlaid plane")
-
+        boxFill[z0:z1,y0:y1,x0:x1] = 1
+        
         boxITK = sitk.GetImageFromArray(boxFill)
         edge = sitk.CannyEdgeDetection(boxITK, lowerThreshold=0, upperThreshold=0.2,
                                  variance=[1] * 3)
@@ -703,6 +667,177 @@ class QtImageViewer(QGraphicsView):
         return boxSeg
         
     
+    def segVolBasedOnSeed(self,volIn,seedx,seedy,seedz,thSet):
+    
+        #print("Into Segmenter")
+    
+        # define 2D bounding box size
+#        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
+#        if(boneInd==0):
+#            boneBound = 50
+#
+#        if(boneInd==1):
+#            boneBound = 50
+#
+#        if(boneInd==2):
+#            boneBound = 80
+
+        newINP = volIn
+
+#        cSize = boneBound
+#
+#        #print(seedx)
+#        #print(seedy)
+#
+#        # identify the search bounding box
+#        x0 = int(np.round(seedx-cSize/2))
+#        x1 = int(np.round(seedx+cSize/2-1))
+#        y0 = int(np.round(seedy-cSize/2))
+#        y1 = int(np.round(seedy+cSize/2-1))
+
+        volShape = volIn.shape
+        
+        print(volShape)
+        print(self.__imgorientation)
+        print(seedx)
+        
+        cSizeX = np.round(self.__bboxIP*volShape[0])
+        cSizeY = np.round(self.__bboxSL*volShape[1])
+        cSizeZ = np.round(self.__bboxIP*volShape[2])
+           
+        # identify the search bounding box
+        x0 = int(np.round(seedx-cSizeX/2))
+        x1 = int(np.round(seedx+cSizeX/2-1))
+        y0 = int(np.round(seedy-cSizeY/2))
+        y1 = int(np.round(seedy+cSizeY/2-1))
+        z0 = int(np.round(seedz-cSizeZ/2))
+        z1 = int(np.round(seedz+cSizeZ/2-1))
+        
+        if(x0 < 0):
+            x0 = 0
+
+        if(y0 < 0):
+            y0 = 0
+
+        if(z0 < 0):
+            z0 = 0
+
+        if(x1 > volShape[2]-1):
+            x1 = volShape[2]-1
+
+        if(y1 > volShape[1]-1):
+            y1 = volShape[1]-1
+
+        if(z1 > volShape[0]-1):
+            z1 = volShape[0]-1
+
+        # reset the seeed indices within the bounding box
+        newSS = np.zeros([2,3])   # x and y are reversed in ITK arrays --
+        newSS[0][0] = seedx - x0
+        newSS[0][1] = seedy - y0
+        newSS[0][2] = seedz - z0
+       
+        newSS[1][0] = seedx - x0
+        newSS[1][1] = seedy - y0
+        newSS[1][2] = seedz - z0
+
+        newSeeds = list(map(tuple,np.array(newSS, dtype='int').tolist()))
+
+        # crop the image to the bounding box
+        cropSection = newINP[z0:z1,y0:y1,x0:x1]
+        
+        print(self.__bboxSL)
+        
+        print(x0)
+        print(x1)
+        
+        print(y0)
+        print(y1)
+        
+        print(z0)
+        print(z1)
+        
+        cropSectionITK = sitk.GetImageFromArray(cropSection)
+        sitk.WriteImage(cropSectionITK,'cropImg3D.nii')
+        
+        #print("Histogram Analysis")
+        # compute histogram of signal within bounding box
+        histogram, bin_edges = np.histogram(cropSection, bins=50, range=(0, np.amax(cropSection)))
+        
+        # identify the peaks of the histogram
+        peak_indices = signal.find_peaks_cwt(histogram, np.arange(1,10))
+        
+        # extract the counts of the peaks
+        peakVals = histogram[peak_indices]
+        
+        # this switch is important
+        # if we have more than 2 peaks, we find the maximum peak beyond the "low signal"
+        # peak, and then use it to bisect the "low signal" and "high signal" peaks.
+        # this is used as the threshold.
+        # if we don't find two peaks, we set it to the middle bin of the histogram
+        # (where it seems that most of the thresholds seem to reside)
+        
+        if(len(peakVals) > 2):
+            
+            testVals = peakVals[range(1,len(peakVals))]
+            index = np.argmax(testVals)
+            
+            #print(index)
+            
+            thresh = thSet*(bin_edges[peak_indices[index+1]]-bin_edges[peak_indices[0]])
+        
+        else:
+            
+            if(len(peakVals)==2):
+            
+                thresh = thSet*(bin_edges[peak_indices[1]]-bin_edges[peak_indices[0]])
+
+            else:
+                print('WARNING: PEAKS NOT IDENTIFIED, THRESHOLD IS A ROUGH GUESS')
+                #thresh = bin_edges[np.round(len(bin_edges)/2)]
+                thresh = thSet*bin_edges[26]
+                
+                
+        print(thresh)
+        
+        #print("Segmenting")
+        
+
+ 
+        
+        print(cropSection.shape)
+        print(newSeeds)
+
+        
+        seg = sitk.ConnectedThreshold(cropSectionITK, seedList=newSeeds, lower=0, upper=thresh)
+
+
+        #print("Growing done")
+        segFilled = sitk.VotingBinaryHoleFilling(image1=seg,
+                                                          radius=[2]*3,
+                                                          majorityThreshold=1,
+                                                          backgroundValue=0,
+                                                          foregroundValue=1)
+        #print("Holes filled")
+        vectorRadius=(1,1,1)
+        kernel=sitk.sitkBall
+        segCleaned = sitk.BinaryMorphologicalOpening(segFilled,vectorRadius,kernel)
+        segNP = sitk.GetArrayFromImage(segCleaned)
+
+        #sitk.WriteImage(segCleaned,'segImg.nii')
+        #sitk.WriteImage(cropSectionITK,'cropImg.nii')
+
+                                                          
+        #print("Edges cleaned")
+
+        # re-pad to full slices
+        # crop the image to the bounding box
+        fullSegNP = np.zeros(newINP.shape)
+        fullSegNP[z0:z1,y0:y1,x0:x1] = segNP
+
+        #print("Returning")
+        
+        return fullSegNP
     
     ##### KMK working --- need to build 3D seg function now
     
@@ -862,13 +997,15 @@ class QtImageViewer(QGraphicsView):
         print(pStr)
         np.save(infoFile,self.__segInfo)
      
-     
-    def resampleImage(self, spacing=None,fill_value=0):
-        
+    def resampleImage(self,ipFact,slFact):
+    
+        pStr ='Resampling image volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
+        print(pStr)
+    
         sitk_image = sitk.GetImageFromArray(self.__imageData)
         sitk_image.SetSpacing([float(self.__pixelspacing[2]), \
-                               float(self.__pixelspacing[1]), \
-                               float(self.__pixelspacing[0])])
+                                float(self.__pixelspacing[1]), \
+                                float(self.__pixelspacing[0])])
         
         num_dim = sitk_image.GetDimension()
         orig_pixelid = sitk_image.GetPixelIDValue()
@@ -877,12 +1014,11 @@ class QtImageViewer(QGraphicsView):
         orig_spacing = sitk_image.GetSpacing()
         orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
     
-        if spacing is None:
-            min_spacing = min(orig_spacing)
-            new_spacing = [min_spacing]*num_dim
-        else:
-            new_spacing = [float(s) for s in spacing]
-    
+        print(orig_spacing)
+        new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]
+ #       new_spacing[1] =
+ #       new_spacing[2] =
+        
         sitk_interpolator = sitk.sitkLinear
     
         new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
@@ -898,17 +1034,68 @@ class QtImageViewer(QGraphicsView):
                                                        orig_origin,
                                                        new_spacing,
                                                        orig_direction,
-                                                       fill_value,
+                                                       0,
                                                        orig_pixelid)
-    
+                                                       
         self.__imageData = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
         self.__pixeldims = self.__imageData.shape
         self.__pixelspacing = [new_spacing,new_spacing,new_spacing]
         self.__winlevel = self.__imageData.min()
-        self.__winwidth = self.__imageData.max()-self.__imageData.min()         
-        self.__imgorientation = 1 # x-y
-        self.__curSlice = self.__pixeldims[2]//2
-        self.setSlice(self.__curSlice) 
+        self.__winwidth = self.__imageData.max()-self.__imageData.min()
+#        self.__imgorientation = 1 # x-y
+#        self.__curSlice = self.__pixeldims[2]//2
+#        self.setSlice(self.__curSlice)
+                                                       
+       
+    
+        #outputImage = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
+        
+#    def resampleImage(self, spacing=None,fill_value=0):
+#
+#        sitk_image = sitk.GetImageFromArray(self.__imageData)
+#        sitk_image.SetSpacing([float(self.__pixelspacing[2]), \
+#                               float(self.__pixelspacing[1]), \
+#                               float(self.__pixelspacing[0])])
+#
+#        num_dim = sitk_image.GetDimension()
+#        orig_pixelid = sitk_image.GetPixelIDValue()
+#        orig_origin = sitk_image.GetOrigin()
+#        orig_direction = sitk_image.GetDirection()
+#        orig_spacing = sitk_image.GetSpacing()
+#        orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
+#
+#        if spacing is None:
+#            min_spacing = min(orig_spacing)
+#            new_spacing = [min_spacing]*num_dim
+#        else:
+#            new_spacing = [float(s) for s in spacing]
+#
+#        sitk_interpolator = sitk.sitkLinear
+#
+#        new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
+#        new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
+#        new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
+#
+#        resample_filter = sitk.ResampleImageFilter()
+#
+#        resampled_sitk_image = resample_filter.Execute(sitk_image,
+#                                                       new_size,
+#                                                       sitk.Transform(),
+#                                                       sitk_interpolator,
+#                                                       orig_origin,
+#                                                       new_spacing,
+#                                                       orig_direction,
+#                                                       fill_value,
+#                                                       orig_pixelid)
+#
+#        self.__imageData = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
+#        self.__pixeldims = self.__imageData.shape
+#        self.__pixelspacing = [new_spacing,new_spacing,new_spacing]
+#        self.__winlevel = self.__imageData.min()
+#        self.__winwidth = self.__imageData.max()-self.__imageData.min()
+#        self.__imgorientation = 1 # x-y
+#        self.__curSlice = self.__pixeldims[2]//2
+#        self.setSlice(self.__curSlice)
         
 #    def setCrossShow(self, value):
 #        if value == 0:
@@ -1162,14 +1349,21 @@ class QtImageViewer(QGraphicsView):
         
         self.__fileName = str(folderName)        
         
-    def loadNIFTI(self, fileName=""):
+    def loadNIFTI(self, fileName="",ipFact=1.0,slFact=1.0):
         if len(fileName) and os.path.isfile(fileName):
             img = nib.load(fileName)
         
+
             self.__pixeldims = list(img.shape)
             self.__pixelspacing = list(img.header.get_zooms())
             self.__imageData = img.get_data()
-            self.__imageDataOrig = img.get_data().copy()
+            
+            print(self.__imageData.shape)
+            self.resampleImage(ipFact,slFact)
+            print(self.__imageData.shape)
+
+            self.__imageDataOrig = self.__imageData.copy()
+
             self.__segData = np.zeros(self.__imageData.shape)
             self.__segBox = np.zeros(self.__imageData.shape)
             inShape = self.__imageData.shape
