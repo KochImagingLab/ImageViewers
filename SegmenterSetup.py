@@ -1027,15 +1027,25 @@ class QtImageViewer(QGraphicsView):
     
         resample_filter = sitk.ResampleImageFilter()
     
-        resampled_sitk_image = resample_filter.Execute(sitk_image,
-                                                       new_size,
-                                                       sitk.Transform(),
-                                                       sitk_interpolator,
-                                                       orig_origin,
-                                                       new_spacing,
-                                                       orig_direction,
-                                                       0,
-                                                       orig_pixelid)
+        #update for sitk 2.0.2 - not yet tested
+        resample_filter.SetSize(new_size)
+        resample_filter.SetTransform(sitk.Transform())
+        resample_filter.SetInterpolator(sitk_interpolator)
+        resample_filter.SetOutputOrigin(orig_origin)
+        resample_filter.SetOutputSpacing(new_spacing)
+        resample_filter.SetOutputOrigin(orig_direction)
+        resample_filter.SetOutputPixelType(orig_pixelid)
+        resampled_sitk_image = resample_filter.Execute(sitk_image)
+    
+#         resampled_sitk_image = resample_filter.Execute(sitk_image,
+#                                                        new_size,
+#                                                        sitk.Transform(),
+#                                                        sitk_interpolator,
+#                                                        orig_origin,
+#                                                        new_spacing,
+#                                                        orig_direction,
+#                                                        0,
+#                                                        orig_pixelid)
                                                        
         self.__imageData = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
         self.__pixeldims = self.__imageData.shape
