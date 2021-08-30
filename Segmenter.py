@@ -39,6 +39,8 @@ def parseArgs():
 
     parser.add_argument('-sF', '--slFact', help='Through Plane Resolution Increase Factor', default='1.0')
 
+    #add input variable paths here?
+    #    or, better, if the outFile exists, import it
 
     args = parser.parse_args()
     
@@ -183,6 +185,7 @@ def threshscrollbarChange(value):
 
     thSet = value/100.0
     thTextbox.setText(str(value))
+    thTextbox.update()
         
 
 def slicetextEditChange():
@@ -435,6 +438,8 @@ def main(thisFile,outFile,ipFact,slFact):
      
     if(thisFile != ''):
         viewer1.loadNIFTI(thisFile,float(ipFact),float(slFact))
+    if(outFile != ''):
+        viewer1.loadNIFTIseg(outFile,float(ipFact),float(slFact))
  
     # Handle left mouse clicks with custom slot.
     viewer1.leftMouseButtonPressed.connect(handleLeftClick)
@@ -575,7 +580,10 @@ def main(thisFile,outFile,ipFact,slFact):
     ortlist.addItem('Dim 2 vs Dim 3')
     ortlist.setCurrentIndex(1)
     
-    viewer1.setSliceOrientation(2)
+    #BS viewer1.setSliceOrientation(2)
+    #should reforce orientation to correct
+    viewer1.setSliceOrientation()
+    print("{}".format(viewer1.getImgOrientation()))
      
     # -----------------------------------------------
     #openFileBtn1.clicked.connect(btn1Click)
@@ -591,7 +599,7 @@ def main(thisFile,outFile,ipFact,slFact):
     ortlist.currentIndexChanged.connect(ortChange)
     threeDBox1.toggled.connect(procThreeD)
     
-    ortChange(1)
+    #bs ortChange(1)
      
      
 #    horscrollbar.valueChanged.connect(horizScrollChange)
