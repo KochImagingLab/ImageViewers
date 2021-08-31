@@ -1023,7 +1023,7 @@ class QtImageViewer(QGraphicsView):
         # re-pad to full slice
         # crop the image to the bounding box
         fullSegNP = np.zeros(newINP.shape)
-        fullSegNP[x0:x1+1,y0:y1+1] = segNP
+        fullSegNP[x0:x1,y0:y1] = segNP
 
         #print("Returning")
 
