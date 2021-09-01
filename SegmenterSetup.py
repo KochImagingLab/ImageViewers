@@ -1281,27 +1281,30 @@ class QtImageViewer(QGraphicsView):
             return [0, self.__imageData.max()-self.__imageData.min()]  
             
     def setSliceOrientation(self, orientation=9999):
+        print("or:{}    curSli:{}    shape:{}    or:{}".format(orientation, self.__curSlice, self.__imageData.shape, self.__imgorientation))
         if orientation == 9999:
             orientation = self.__imgorientation
         if orientation == 1:
             self.__imgorientation = 1
-            self.setSliceOrientationToXY()
+            #self.setSliceOrientationToXY()
+            self.setSliceOrientationToXZ()
         elif orientation == 2:   
             self.__imgorientation = 2
-            self.setSliceOrientationToXZ()
+            #self.setSliceOrientationToXZ()
+            self.setSliceOrientationToXY()
         else:
             self.__imgorientation = 3
             self.setSliceOrientationToYZ()
     
     def setSliceOrientationToXY(self):
-        self.__imgorientation = 1
+        self.__imgorientation = 2
         if (self.__imageData is not None):
-            self.__curSlice = np.round(self.__pixeldims[2]/2)
+            self.__curSlice = int(np.round(self.__pixeldims[2]/2))
             self.setSlice(self.__curSlice)
             
     
     def setSliceOrientationToXZ(self):
-        self.__imgorientation = 2
+        self.__imgorientation = 1
         if (self.__imageData is not None):
             self.__curSlice = int(np.round(self.__pixeldims[1]/2))
             #print('INTO XZ')
@@ -1311,7 +1314,7 @@ class QtImageViewer(QGraphicsView):
     def setSliceOrientationToYZ(self):
         self.__imgorientation = 3
         if (self.__imageData is not None):
-            self.__curSlice = np.round(self.__pixeldims[0]//2)
+            self.__curSlice = int(np.round(self.__pixeldims[0]//2))
             self.setSlice(self.__curSlice) 
         
     def setFlipX(self, value):
@@ -1357,7 +1360,9 @@ class QtImageViewer(QGraphicsView):
             #print(slice)
             if self.__imgorientation == 1:   #x-y
 #                 localData = self.__imageData[:,:,slice]
-                data = self.imgProcessing(self.__imageData[:,:,slice])  
+                #print("test: {}   {}".format(self.__imageData.shape, slice))
+                #data = self.imgProcessing(self.__imageData[:,:,slice])  
+                data = self.imgProcessing(self.__imageData[:,slice,:])  
                 qimage = self.get_qimage(data)
 #                 qimage = qimage.mirrored(self.__flipX, self.__flipY)
                 rotate = QTransform()
@@ -1365,7 +1370,8 @@ class QtImageViewer(QGraphicsView):
                 qimg = qimage.transformed(rotate)
                 self.setImage(qimg)                
             elif self.__imgorientation == 2:  #x-z
-                data = self.imgProcessing(self.__imageData[:,slice,:])              
+                #data = self.imgProcessing(self.__imageData[:,slice,:]) 
+                data = self.imgProcessing(self.__imageData[:,:,slice])              
                 qimage = self.get_qimage(data)
 #                 qimage = qimage.mirrored(self.__flipX, self.__flipY)   
                 rotate = QTransform()
@@ -1381,6 +1387,8 @@ class QtImageViewer(QGraphicsView):
                 qimg = qimage.transformed(rotate)                
                 self.setImage(qimg)   
     
+    #NOTE: I'm fairly certain one of the x,y combos is flipped in these two functions
+    #probably orientation 2 should be 1 and 0 instead of 0 and 1
     def getImgWidth(self):
         if self.__imgorientation == 1:   #x-y
             if self.__pixeldims is not None:
@@ -1401,12 +1409,12 @@ class QtImageViewer(QGraphicsView):
     def getImgHeight(self):
         if self.__imgorientation == 1:   #x-y
             if self.__pixeldims is not None:
-                return self.__pixeldims[1]
+                return self.__pixeldims[2]
             else:
                 return 0
         elif self.__imgorientation == 2:  #x-z
             if self.__pixeldims is not None:
-                return self.__pixeldims[2]
+                return self.__pixeldims[1]
             else:
                 return 0
         else:                          #y-z
@@ -1423,12 +1431,12 @@ class QtImageViewer(QGraphicsView):
         #print(self.getCurSlice())
         if self.__imgorientation == 1:   #x-y
             if self.__pixeldims is not None:
-                return self.__pixeldims[2]-1
+                return self.__pixeldims[1]-1
             else:
                 return 0
         elif self.__imgorientation == 2:  #x-z
             if self.__pixeldims is not None:
-                return self.__pixeldims[1]-1
+                return self.__pixeldims[2]-1
             else:
                 return 0
         else:                          #y-z
@@ -1440,12 +1448,12 @@ class QtImageViewer(QGraphicsView):
     def getSliceRange(self):
         if self.__imgorientation == 1:   #x-y
             if self.__pixeldims is not None:
-                return self.__pixeldims[2]
+                return self.__pixeldims[1]
             else:
                 return 0
         elif self.__imgorientation == 2:  #x-z
             if self.__pixeldims is not None:
-                return self.__pixeldims[1]
+                return self.__pixeldims[2]
             else:
                 return 0
         else:                          #y-z
@@ -1530,7 +1538,7 @@ class QtImageViewer(QGraphicsView):
             self.__imgorientation = np.argmin(self.__imageData.shape) # x-y
             
                
-            self.__curSlice = self.__pixeldims[self.__imgorientation]//2
+            self.__curSlice = int(self.__pixeldims[self.__imgorientation]//2)
             self.setSlice(self.__curSlice)
             
             self.__fileName = fileName
