@@ -846,6 +846,10 @@ class QtImageViewer(QGraphicsView):
         # extract the counts of the peaks
         peakVals = histogram[peak_indices]
         
+        #print(histogram)
+        #print(peak_indices)
+        #print(peakVals)
+        
         # this switch is important
         # if we have more than 2 peaks, we find the maximum peak beyond the "low signal"
         # peak, and then use it to bisect the "low signal" and "high signal" peaks.
@@ -853,7 +857,16 @@ class QtImageViewer(QGraphicsView):
         # if we don't find two peaks, we set it to the middle bin of the histogram
         # (where it seems that most of the thresholds seem to reside)
         
-        if(len(peakVals) > 2):
+        if(len(peakVals) > 6):
+            #if we have lots of peaks, drop the first few items to make sure we're clear of the low signal
+            drop = int(.25*len(peakVals))
+            
+            testVals = peakVals[range(drop,len(peakVals))]
+            index = np.argmax(testVals)
+            
+            thresh = thSet*(bin_edges[peak_indices[index+drop]]-bin_edges[peak_indices[0]])
+        
+        elif(len(peakVals) > 2):
             
             testVals = peakVals[range(1,len(peakVals))]
             index = np.argmax(testVals)
@@ -985,6 +998,7 @@ class QtImageViewer(QGraphicsView):
         # extract the counts of the peaks
         peakVals = histogram[peak_indices]
         
+        
         # this switch is important
         # if we have more than 2 peaks, we find the maximum peak beyond the "low signal"
         # peak, and then use it to bisect the "low signal" and "high signal" peaks.
@@ -992,7 +1006,16 @@ class QtImageViewer(QGraphicsView):
         # if we don't find two peaks, we set it to the middle bin of the histogram
         # (where it seems that most of the thresholds seem to reside)
         
-        if(len(peakVals) > 2):
+        if(len(peakVals) > 6):
+            #if we have lots of peaks, drop the first few items to make sure we're clear of the low signal
+            drop = int(.25*len(peakVals))
+            
+            testVals = peakVals[range(drop,len(peakVals))]
+            index = np.argmax(testVals)
+            
+            thresh = thSet*(bin_edges[peak_indices[index+drop]]-bin_edges[peak_indices[0]])
+        
+        elif(len(peakVals) > 2):
             
             testVals = peakVals[range(1,len(peakVals))]
             index = np.argmax(testVals)
@@ -1012,6 +1035,8 @@ class QtImageViewer(QGraphicsView):
                 thresh = thSet*bin_edges[26]
 
         print(thresh)
+        
+        print("{}: threshold:  {}".format(inspect.stack()[0][3],thresh))
         
         #print("Segmenting")
         

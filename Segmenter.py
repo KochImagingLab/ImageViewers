@@ -452,7 +452,7 @@ def main(thisFile,outFile,ipFact,slFact):
      
 #    # -----------------------------------------------
     thLabel = QLabel()
-    thLabel.setText('Threshold Scale [0, 100%]')
+    thLabel.setText('Threshold Scale [0, 120%]')
     threshscrollbar = QScrollBar()
     threshscrollbar.setOrientation(1)
     thTextbox = QLineEdit()
@@ -460,7 +460,7 @@ def main(thisFile,outFile,ipFact,slFact):
     thTextbox.setText(str(50))
 
     threshscrollbar.setMinimum(0)
-    threshscrollbar.setMaximum(100)
+    threshscrollbar.setMaximum(120)
     threshscrollbar.setValue(50)
     threshscrollbar.setPageStep(1)
 #
