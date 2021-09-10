@@ -407,11 +407,6 @@ def main(thisFile,outFile,ipFact,slFact):
     global thTextbox
     global boundIPTextbox
     global boundSLTextbox
-    global bboxIP
-    global bboxSL
-    
-    bboxIP = 0.25
-    bboxSL = 0.25
 
     global thSet
 
@@ -510,11 +505,11 @@ def main(thisFile,outFile,ipFact,slFact):
 
     boundIPTextbox = QLineEdit()
     boundIPTextbox.setFixedSize(50, 20)
-    boundIPTextbox.setText(str(0.25))
+    boundIPTextbox.setText(str(viewer1.get_bboxIP()))
     
     boundSLTextbox = QLineEdit()
     boundSLTextbox.setFixedSize(50, 20)
-    boundSLTextbox.setText(str(0.25))
+    boundSLTextbox.setText(str(viewer1.get_bboxSL()))
 
     # -----------------------------------------------
     

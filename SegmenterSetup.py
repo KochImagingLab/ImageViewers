@@ -141,8 +141,8 @@ class QtImageViewer(QGraphicsView):
         self.__pixelspacing = None
         self.__imgorientation = 1
         self.__curSlice = 0
-        self.__bboxIP = 0.25
-        self.__bboxSL = 0.25
+        self.__bboxIP = 0.2
+        self.__bboxSL = 0.95
         
 #        # -------------------
 #        self.__crossshow = False
@@ -716,6 +716,25 @@ class QtImageViewer(QGraphicsView):
                                  
         boxSeg = sitk.GetArrayFromImage(edge)
         
+        #TODO: clear the center of the top and bottom as viewed
+        #edgebox = boxSeg[z0-1,:,:] #change to appropriate axis based on orientation
+        #boxITK = sitk.GetImageFromArray(edgebox)
+        #edge = sitk.CannyEdgeDetection(boxITK, lowerThreshold=0, upperThreshold=0.2,
+        #                         variance=[1] * 3)
+        #edgebox = sitk.GetArrayFromImage(edge)
+        #boxSeg[z0-1,:,:] = edgebox
+        #nevermind, there's a way easier way
+        if(self.__imgorientation == 1):
+            boxSeg[:,y0,:] = boxSeg[:,y0+1,:]
+            boxSeg[:,y1,:] = boxSeg[:,y1-1,:]
+        elif(self.__imgorientation == 2):
+            #like everywhere else, orientation 2 still needs to be straightened out
+            boxSeg[:,:,x0] = boxSeg[:,:,x0+1]
+            boxSeg[:,:,x1]=boxSeg[:,:,x1-1]
+        else:
+            boxSeg[z0,:,:] = boxSeg[z0+1,:,:]
+            boxSeg[z1,:,:]=boxSeg[z1-1,:,:]
+        
         return boxSeg
         
     
@@ -821,7 +840,8 @@ class QtImageViewer(QGraphicsView):
         histogram, bin_edges = np.histogram(cropSection, bins=50, range=(0, np.amax(cropSection)))
         
         # identify the peaks of the histogram
-        peak_indices = signal.find_peaks_cwt(histogram, np.arange(1,10))
+        #peak_indices = signal.find_peaks_cwt(histogram, np.arange(1,10))
+        peak_indices,_ = signal.find_peaks( histogram) 
         
         # extract the counts of the peaks
         peakVals = histogram[peak_indices]
@@ -957,7 +977,10 @@ class QtImageViewer(QGraphicsView):
         histogram, bin_edges = np.histogram(cropSection, bins=50, range=(0, np.amax(cropSection)))
         
         # identify the peaks of the histogram
-        peak_indices = signal.find_peaks_cwt(histogram, np.arange(1,10))
+        #peak_indices = signal.find_peaks_cwt(histogram, np.arange(1,10))
+        #okay, here's our problem, sometimes we have two peaks in the low signal, so, two thoughts
+        peak_indices,_ = signal.find_peaks(histogram)
+        #peak_indices3 = signal.find_peaks_cwt(histogram, np.arange(3,10))
         
         # extract the counts of the peaks
         peakVals = histogram[peak_indices]
@@ -974,9 +997,8 @@ class QtImageViewer(QGraphicsView):
             testVals = peakVals[range(1,len(peakVals))]
             index = np.argmax(testVals)
             
-            #print(index)
-            
             thresh = thSet*(bin_edges[peak_indices[index+1]]-bin_edges[peak_indices[0]])
+        
         
         else:
             
@@ -989,7 +1011,7 @@ class QtImageViewer(QGraphicsView):
                 #thresh = bin_edges[np.round(len(bin_edges)/2)]
                 thresh = thSet*bin_edges[26]
 
-        #print(thresh)
+        print(thresh)
         
         #print("Segmenting")
         
@@ -998,7 +1020,6 @@ class QtImageViewer(QGraphicsView):
         
         #print(newSeeds)
 
-        
         seg = sitk.ConnectedThreshold(cropSectionITK, seedList=newSeeds, lower=0, upper=thresh)
 
 
@@ -1461,6 +1482,12 @@ class QtImageViewer(QGraphicsView):
                 return self.__pixeldims[0]
             else:
                 return 0
+            
+    def get_bboxIP(self):
+        return self.__bboxIP
+    
+    def get_bboxSL(self):
+        return self.__bboxSL
     
     def loadDicomSeries(self, folderName=""):  
         '''
