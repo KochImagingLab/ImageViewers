@@ -43,33 +43,6 @@ __author__ = ""
 __version__ = ""
 
 
-#class CrosshairWindow(FigureCanvasQTAgg):
-#
-#    def __init__(self, parent=None, width=5, height=4, dpi=100):
-#        self.fig = Figure(figsize=(width, height), dpi=dpi)
-#        self.axes1 = self.fig.add_subplot(211)
-#        self.axes1.set_title("Vertical Profile")
-#        self.axes2 = self.fig.add_subplot(212)
-#        self.axes2.set_title("Horizontal Profile")
-#        self.fig.subplots_adjust(hspace=0.8)
-#        super(CrosshairWindow, self).__init__(self.fig)
-#
-
-#class ThruPlaneWindow(FigureCanvasQTAgg):
-#
-#    def __init__(self, parent=None, width=5, height=4, dpi=100):
-#        self.fig2 = Figure(figsize=(width, height), dpi=dpi)
-#        self.plt1 = self.fig2.add_subplot(221)
-#        self.plt2 = self.fig2.add_subplot(222)
-#        self.plt3 = self.fig2.add_subplot(212)
-#
-#        self.fig2.subplots_adjust(hspace=0.8, wspace=0.5)
-#
-#
-#        super(ThruPlaneWindow, self).__init__(self.fig2)
-
-
-
 class QtImageViewer(QGraphicsView):
     """ PyQt image viewer widget for a QPixmap in a QGraphicsView scene with mouse zooming and panning.
 
@@ -101,12 +74,6 @@ class QtImageViewer(QGraphicsView):
         # Image is displayed as a QPixmap in a QGraphicsScene attached to this QGraphicsView.
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
-        
-        
-#         scene = QGraphicsScene()
-#         view = QGraphicsView(scene)
-#         view.show()
-        
         
         #set the focus to this viewer
         self.setFocusPolicy(Qt.StrongFocus)
@@ -222,198 +189,7 @@ class QtImageViewer(QGraphicsView):
         
         self.__imgorientation = orient
         
-        
-    
-
-#    def buildCrosshairPopup(self):
-#        self.ch = CrosshairWindow(self, width=5, height=4, dpi=100)
-#
-#        if self.__imgorientation == 1:
-#            horizArr = self.__imageData[:,0,self.getCurSlice()]
-#            vertArr = self.__imageData[0,:,self.getCurSlice()]
-#        elif self.__imgorientation == 2:
-#            horizArr = self.__imageData[:,self.getCurSlice(),0]
-#            vertArr = self.__imageData[0,self.getCurSlice(),:]
-#        elif self.__imgorientation == 3:
-#            horizArr = self.__imageData[self.getCurSlice(),:,0]
-#            vertArr = self.__imageData[self.getCurSlice(),0,:]
-#        else:
-#            print("ERROR: Invlaid plane")
-#
-#        self.ch.axes1.plot(vertArr)
-#        self.ch.axes2.plot(horizArr)
-#        self.ch.show()
-#
-#        self.display_VertLine(self.getVertVal())
-#        self.display_HorizLine(self.getHorizVal())
-#
-            
-#    def clearCrosshairPopup(self):
-#        self.ch.close()
-#        self.__crosshair = 0
-#        self.scene.removeItem(self.HLine)
-#        self.scene.removeItem(self.VLine)
-#        self.setHorizVal(0)
-#        self.setVertVal(0)
-#        if(self.__thruPlane == 2):
-#            self.__thruPlane = 0
-#            self.tp.close()
-#
-#    def setCrosshair(self, value):
-#        if self.__imageData is not None:
-#            self.__crosshair = value
-#            if(value == 2):
-#                self.buildCrosshairPopup()
-#            else:
-#                self.clearCrosshairPopup()
-#        else:
-#            return 0
-#
-#
-#    def buildThruPlanePopup(self):
-#        self.tp = ThruPlaneWindow(self, width=5, height=4, dpi=100)
-#
-#        if self.__imgorientation == 1:
-#            data1 = np.rot90(self.__imageData[:,self.getHorizVal(),:])
-#            data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
-#            data3 = self.__imageData[self.getVertVal(),self.getHorizVal(),:]
-#        elif self.__imgorientation == 2:
-#            data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
-#            data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
-#            data3 = self.__imageData[self.getVertVal(),:,self.getHorizVal()]
-#        elif self.__imgorientation == 3:
-#            data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
-#            data2 = np.rot90(self.__imageData[:,self.getVertVal(),:])
-#            data3 = self.__imageData[:,self.getVertVal(),self.getHorizVal()]
-#
-#
-#        self.tp.plt1.imshow(data1, aspect='auto')
-#        self.tp.plt2.imshow(data2, aspect='auto')
-#        self.tp.plt3.plot(data3)
-#
-#        self.tp.plt3.set_title("Through-Plane Profile")
-#        self.tp.plt3.set_xlabel("Slice Number")
-#        self.tp.plt3.set_xlim([0, int(self.getSliceMax())])
-#
-#        self.tp.show()
-#
-#        self.display_VertLine(self.getVertVal())
-#        self.display_HorizLine(self.getHorizVal())
-#
-#
-#    def updateThroughPlane(self):
-#        if self.__imgorientation == 1:
-#            data1 = np.rot90(self.__imageData[:,self.getHorizVal(),:])
-#            data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
-#            data3 = self.__imageData[self.getVertVal(),self.getImgHeight()-1-self.getHorizVal(),:]
-#        elif self.__imgorientation == 2:
-#            data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
-#            data2 = np.rot90(self.__imageData[self.getVertVal(),:,:])
-#            data3 = self.__imageData[self.getVertVal(),:,self.getImgHeight()-1-self.getHorizVal()]
-#        elif self.__imgorientation == 3:
-#            data1 = np.rot90(self.__imageData[:,:,self.getHorizVal()])
-#            data2 = np.rot90(self.__imageData[:,self.getVertVal(),:])
-#            data3 = self.__imageData[:,self.getVertVal(),self.getImgHeight()-1-self.getHorizVal()]
-#
-#
-#        self.tp.plt1.clear()
-#        self.tp.plt2.clear()
-#        self.tp.plt3.clear()
-#
-#        self.tp.plt1.imshow(data1, aspect='auto')
-#        self.tp.plt2.imshow(data2, aspect='auto')
-#        self.tp.plt3.plot(data3)
-#
-#        self.tp.plt3.set_title("Through-Plane Profile")
-#        self.tp.plt3.set_xlabel("Slice Number")
-#        self.tp.plt3.set_xlim([0, int(self.getSliceMax())])
-#
-#        self.tp.draw()
-#
-#
-#    def clearThruPlanePopup(self):
-#        self.tp.close()
-#
-#
-#    def setThruPlane(self, value):
-#        self.__thruPlane = value
-#        if(value == 2):
-#            self.buildThruPlanePopup()
-#        else:
-#            self.clearThruPlanePopup()
-#
-#    def updateVerticalProfile(self, value):
-#        self.setVertVal(value)
-#
-#        if self.__imgorientation == 1:
-#            vertArr = self.__imageData[value,:,self.getCurSlice()]
-#        elif self.__imgorientation == 2:
-#            vertArr = self.__imageData[value,self.getCurSlice(),:]
-#        elif self.__imgorientation == 3:
-#            vertArr = self.__imageData[self.getCurSlice(),value,:]
-#        else:
-#            print("ERROR: Invlaid plane")
-#
-#
-#        self.ch.axes1.clear()
-#        self.ch.axes1.set_title("Vertical Profile")
-#        self.ch.axes1.plot(vertArr)
-#        self.ch.draw()
-#
-#        if(self.__thruPlane == 2):
-#            self.updateThroughPlane()
-#
-#        self.display_VertLine(value)
-#
-#    def updateHorizontalProfile(self, value):
-#        self.setHorizVal(value)
-#
-#
-#        if self.__imgorientation == 1:
-#            horizArr = self.__imageData[:,self.getImgHeight()-1-value,self.getCurSlice()]
-#        elif self.__imgorientation == 2:
-#            horizArr = self.__imageData[:,self.getCurSlice(),self.getImgHeight()-1-value]
-#        elif self.__imgorientation == 3:
-#            horizArr = self.__imageData[self.getCurSlice(),:,self.getImgHeight()-1-value]
-#        else:
-#            print("ERROR: Invlaid plane")
-#
-#        self.ch.axes2.clear()
-#        self.ch.axes2.set_title("Horizontal Profile")
-#        self.ch.axes2.plot(horizArr)
-#        self.ch.draw()
-#
-#        if(self.__thruPlane == 2):
-#            self.updateThroughPlane()
-#        self.display_HorizLine(value)
-#
-#    def display_VertLine(self, value):
-#        try:
-#            self.scene.removeItem(self.VLine)
-#        except:
-#            pass
-#        self.VLine = self.scene.addLine(value, 0, value, self.getImgHeight(), QPen(Qt.red))
-#
-#
-#    def display_HorizLine(self, value):
-#        try:
-#            self.scene.removeItem(self.HLine)
-#        except:
-#            pass
-#        self.HLine = self.scene.addLine(0, value, self.getImgWidth(), value, QPen(Qt.green))
-#
-
-#    def getHorizVal(self):
-#        return self.__horiz
-#
-#    def getVertVal(self):
-#        return self.__vert
-#
-#    def setHorizVal(self, value):
-#        self.__horiz = value
-#
-#    def setVertVal(self, value):
-#        self.__vert = value
+#removed lots of never used code. See CompareSetup if you think you need something that is gone.
 
     
     def setWindowLevel(self, value):
@@ -624,17 +400,8 @@ class QtImageViewer(QGraphicsView):
         sliceShape = sliceIn.shape
         
         #only adding to get it to stop crashing
-#         if(self.__imgorientation == 1):
         cSizeX = np.round(self.__bboxIP*sliceShape[0])
         cSizeY = np.round(self.__bboxIP*sliceShape[1])
-#         elif(self.__imgorientation == 2):
-#             
-#             cSizeX = np.round(self.__bboxIP*sliceShape[2])
-#             cSizeY = np.round(self.__bboxIP*sliceShape[0])
-#         else:
-#             
-#             cSizeX = np.round(self.__bboxIP*sliceShape[0])
-#             cSizeY = np.round(self.__bboxIP*sliceShape[1])
         print("{}: 2d x,y:  {},{}".format(inspect.stack()[0][3],cSizeX,cSizeY))
         
         #print(cSizeX)
@@ -741,31 +508,7 @@ class QtImageViewer(QGraphicsView):
     def segVolBasedOnSeed(self,volIn,seedx,seedy,seedz,thSet):
     
         #print("Into Segmenter")
-    
-        # define 2D bounding box size
-#        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
-#        if(boneInd==0):
-#            boneBound = 50
-#
-#        if(boneInd==1):
-#            boneBound = 50
-#
-#        if(boneInd==2):
-#            boneBound = 80
-
         newINP = volIn
-
-#        cSize = boneBound
-#
-#        #print(seedx)
-#        #print(seedy)
-#
-#        # identify the search bounding box
-#        x0 = int(np.round(seedx-cSize/2))
-#        x1 = int(np.round(seedx+cSize/2-1))
-#        y0 = int(np.round(seedy-cSize/2))
-#        y1 = int(np.round(seedy+cSize/2-1))
-
         volShape = volIn.shape
         
         print("{}: volShape:  {}".format(inspect.stack()[0][3],volShape))
@@ -911,9 +654,6 @@ class QtImageViewer(QGraphicsView):
         segCleaned = sitk.BinaryMorphologicalOpening(segFilled,vectorRadius,kernel)
         segNP = sitk.GetArrayFromImage(segCleaned)
 
-        #sitk.WriteImage(segCleaned,'segImg.nii')
-        #sitk.WriteImage(cropSectionITK,'cropImg.nii')
-
                                                           
         #print("Edges cleaned")
 
@@ -931,31 +671,8 @@ class QtImageViewer(QGraphicsView):
     def segSliceBasedOnSeed(self,sliceIn,seedx,seedy,thSet):
     
         #print("Into Segmenter")
-    
-        # define 2D bounding box size
-#        boneBound = 50  # will need to tweak this for each bone -- I've only looked at scaphoid
-#        if(boneInd==0):
-#            boneBound = 50
-#
-#        if(boneInd==1):
-#            boneBound = 50
-#
-#        if(boneInd==2):
-#            boneBound = 80
 
         newINP = sliceIn
-
-#        cSize = boneBound
-#
-#        #print(seedx)
-#        #print(seedy)
-#
-#        # identify the search bounding box
-#        x0 = int(np.round(seedx-cSize/2))
-#        x1 = int(np.round(seedx+cSize/2-1))
-#        y0 = int(np.round(seedy-cSize/2))
-#        y1 = int(np.round(seedy+cSize/2-1))
-
         sliceShape = sliceIn.shape
         
         cSizeX = np.round(self.__bboxIP*sliceShape[0])
@@ -1078,7 +795,7 @@ class QtImageViewer(QGraphicsView):
     
     
     def writeOutputFiles(self,outFile):
-        
+        #add .nii to the name if -o is a pattern
         if(outFile.endswith("nii") or outFile.endswith( "nii.gz") ):
             niiFile = outFile 
         else:
@@ -1086,19 +803,18 @@ class QtImageViewer(QGraphicsView):
         pStr = 'Outputting segmentation to file %s' % niiFile
         print(pStr)
         
+        #orientation - there is a still a bug here somewhere
+        #seems to vary depending on the input file orientation
+        print("Orientation {}".format(self.__imgorientation))
         if(self.__imgorientation == 1):
-            sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[2,1,0]))
-            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segData, axes=[2,1,0])),niiFile)
+            sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2]))
         elif(self.__imgorientation == 2):
-            print("This one is wrong, needs to be fixed if you're using it.")
+            print("Orientation 2: This one is wrong, needs to be fixed if you're using it.")
             sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[1,0,2]))
-            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segData, axes=[2,1,0])),niiFile)
         else:
             sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2]))
-            #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2])),niiFile)
-#         sitk_image.SetSpacing([float(self.__pixelspacing[0]), \
-#                                 float(self.__pixelspacing[1]), \
-#                                 float(self.__pixelspacing[2])])
+        
+        #use th template if possible
         if(self.__ROITemplate != None):
             print("Copying header.")
             sitk_image.CopyInformation(self.__ROITemplate)
@@ -1109,17 +825,14 @@ class QtImageViewer(QGraphicsView):
         niiFile = '%s_segBox.nii' % outFile
         pStr = 'Outputting segmentation to file %s' % niiFile
         print(pStr)
-       
         sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segBox, axes=[2,1,0])),niiFile)
         
-    
         infoFile = '%s_segInfo.npy' % outFile
         pStr = 'Outputting info to file %s' % infoFile
         print(pStr)
         np.save(infoFile,self.__segInfo)
      
     def resampleImage(self,ipFact,slFact):
-    
         pStr ='Resampling image volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
         print(pStr)
     
@@ -1140,13 +853,14 @@ class QtImageViewer(QGraphicsView):
         orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
     
         print(orig_spacing)
-        new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]
- #       new_spacing[1] =
- #       new_spacing[2] =
-        
+        if(ipFact == 1.0 and slFact == 1.0):
+            new_spacing = orig_spacing
+            new_size = orig_size
+        else:
+            new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]       
+            new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
         sitk_interpolator = sitk.sitkLinear
     
-        new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
         new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
         new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
     
@@ -1241,61 +955,64 @@ class QtImageViewer(QGraphicsView):
 
 
     def resampleImageSpec(self,myImg,ipFact,slFact):
+        if(ipFact != 1.0 or slFact != 1.0):
+            
+            pStr ='Resampling ROI volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
+            print(pStr)
+            print("{}: input last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-1])))
+            print("{}: input 2last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-2])))
+            print("{}: input 3last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-3])))
+            sitk_image = sitk.GetImageFromArray(myImg)
+            #should be corrected when loading the initial nifti
+            sitk_image.SetSpacing([float(self.__pixelspacing[0]), \
+                                    float(self.__pixelspacing[1]), \
+                                    float(self.__pixelspacing[2])])
+            
+            print("{}: spacing:  {}".format(inspect.stack()[0][3],sitk_image.GetSpacing()))
+            
+            num_dim = sitk_image.GetDimension()
+            print("{}: num dims:  {}".format(inspect.stack()[0][3],num_dim))
+            orig_pixelid = sitk_image.GetPixelIDValue()
+            orig_origin = sitk_image.GetOrigin()
+            orig_direction = sitk_image.GetDirection()
+            orig_spacing = sitk_image.GetSpacing()
+            print("{}: spacing:  {}".format(inspect.stack()[0][3],orig_spacing))
+            orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
+            print("{}: orig_size:  {}".format(inspect.stack()[0][3],orig_size))
+            
+            #print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(myImg[-1,:,:])))
         
-        pStr ='Resampling ROI volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
-        print(pStr)
-        print("{}: input last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-1])))
-        print("{}: input 2last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-2])))
-        print("{}: input 3last slice sum:  {}".format(inspect.stack()[0][3],np.sum(myImg[:,:,-3])))
-        sitk_image = sitk.GetImageFromArray(myImg)
-        #should be corrected when loading the initial nifti
-        sitk_image.SetSpacing([float(self.__pixelspacing[0]), \
-                                float(self.__pixelspacing[1]), \
-                                float(self.__pixelspacing[2])])
+            new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]
+            
+            #sitk_interpolator = sitk.sitkLinear
+            sitk_interpolator = sitk.sitkNearestNeighbor
         
-        print("{}: spacing:  {}".format(inspect.stack()[0][3],sitk_image.GetSpacing()))
+            new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
+            new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
+            new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
+            print("{}: new_size:  {}".format(inspect.stack()[0][3],new_size))
         
-        num_dim = sitk_image.GetDimension()
-        print("{}: num dims:  {}".format(inspect.stack()[0][3],num_dim))
-        orig_pixelid = sitk_image.GetPixelIDValue()
-        orig_origin = sitk_image.GetOrigin()
-        orig_direction = sitk_image.GetDirection()
-        orig_spacing = sitk_image.GetSpacing()
-        print("{}: spacing:  {}".format(inspect.stack()[0][3],orig_spacing))
-        orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
-        print("{}: orig_size:  {}".format(inspect.stack()[0][3],orig_size))
+            resample_filter = sitk.ResampleImageFilter()
         
-        #print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(myImg[-1,:,:])))
-    
-        new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]
-        
-        #sitk_interpolator = sitk.sitkLinear
-        sitk_interpolator = sitk.sitkNearestNeighbor
-    
-        new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
-        new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
-        new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
-        print("{}: new_size:  {}".format(inspect.stack()[0][3],new_size))
-    
-        resample_filter = sitk.ResampleImageFilter()
-    
-        #update for sitk 2.0.2 - not yet tested
-        resample_filter.SetSize(new_size)
-        resample_filter.SetTransform(sitk.Transform())
-        resample_filter.SetInterpolator(sitk_interpolator)
-        resample_filter.SetOutputOrigin(orig_origin)
-        resample_filter.SetOutputSpacing(new_spacing)
-        resample_filter.SetOutputOrigin(orig_direction)
-        resample_filter.SetOutputPixelType(orig_pixelid)
-        resampled_sitk_image = resample_filter.Execute(sitk_image)
-        
-        tmp=np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
-        print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-1,:,:])))
-        print("{}: 2lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-2,:,:])))
-        print("{}: 3lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-3,:,:])))
+            #update for sitk 2.0.2 - not yet tested
+            resample_filter.SetSize(new_size)
+            resample_filter.SetTransform(sitk.Transform())
+            resample_filter.SetInterpolator(sitk_interpolator)
+            resample_filter.SetOutputOrigin(orig_origin)
+            resample_filter.SetOutputSpacing(new_spacing)
+            resample_filter.SetOutputOrigin(orig_direction)
+            resample_filter.SetOutputPixelType(orig_pixelid)
+            resampled_sitk_image = resample_filter.Execute(sitk_image)
+            
+            tmp=np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
+            print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-1,:,:])))
+            print("{}: 2lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-2,:,:])))
+            print("{}: 3lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-3,:,:])))
                                                        
-        return(np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0]))
-        
+            return(np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0]))
+        else:
+            print("Segmentation is already at correct spacing")
+            return np.transpose(myImg, axes=[2,1,0])
 #    def setCrossShow(self, value):
 #        if value == 0:
 #            self.__crossshow = False
@@ -1572,6 +1289,10 @@ class QtImageViewer(QGraphicsView):
             self.__pixeldims = list(img.shape)
             self.__pixelspacing = list(img.header.get_zooms())
             self.__imageData = img.get_data()
+
+            #if currently none, use this as the ROI template
+            if(self.__ROITemplate == None):
+                self.__ROITemplate = sitk.ReadImage(fileName)
             
             print("input size: {}".format(self.__imageData.shape))
             self.resampleImage(ipFact,slFact)
@@ -1598,6 +1319,7 @@ class QtImageViewer(QGraphicsView):
     def loadNIFTIseg(self, fileName="",ipFact=1.0,slFact=1.0):
         if len(fileName) and os.path.isfile(fileName) and self.hasImage():
             img = nib.load(fileName)
+            #force overwrite the template, we'll save with the same file parameters
             self.__ROITemplate = sitk.ReadImage(fileName)
             self.__segData = self.resampleImageSpec(img.get_data(),ipFact,slFact)
             
@@ -1608,7 +1330,7 @@ class QtImageViewer(QGraphicsView):
             
             volVis = np.where(segVolOut > 0,32766,thisVol)
             self.__imageData = volVis
-            self.__segData = segVolOut
+            #self.__segData = segVolOut <-- this does nothing
             
             self.setSlice(self.__curSlice)
             
