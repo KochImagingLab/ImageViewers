@@ -241,7 +241,7 @@ class QtImageViewer(QGraphicsView):
                 seedy = self.getCurSlice()
                 seedz = column
             elif(self.__imgorientation == 2):
-                print("Segmentation for this orientation has not been tested!")
+                #print("Segmentation for this orientation has not been tested!")
                 seedx = self.getCurSlice()
                 seedy = column 
                 seedz = self.getImgHeight()-1-row 
@@ -805,12 +805,13 @@ class QtImageViewer(QGraphicsView):
         
         #orientation - there is a still a bug here somewhere
         #seems to vary depending on the input file orientation
+        #I think this is now all handled correctly in the load.
         print("Orientation {}".format(self.__imgorientation))
         if(self.__imgorientation == 1):
             sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2]))
         elif(self.__imgorientation == 2):
-            print("Orientation 2: This one is wrong, needs to be fixed if you're using it.")
-            sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[1,0,2]))
+            #print("Orientation 2: This one is wrong, needs to be fixed if you're using it.")
+            sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2]))
         else:
             sitk_image = sitk.GetImageFromArray(np.transpose(self.__segData, axes=[0,1,2]))
         
