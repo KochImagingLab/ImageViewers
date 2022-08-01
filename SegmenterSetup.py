@@ -834,70 +834,103 @@ class QtImageViewer(QGraphicsView):
         np.save(infoFile,self.__segInfo)
      
     def resampleImage(self,ipFact,slFact):
-        pStr ='Resampling image volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
-        print(pStr)
-    
-        print("{}: input last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-1])))
-        print("{}: input 2last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-2])))
-        print("{}: input 3last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-3])))
+        if(ipFact != 1.0 or slFact != 1.0):
+            pStr ='Resampling image volume to higher resolution by factors %f and %f ' % (ipFact,slFact)
+            print(pStr)
         
-        sitk_image = sitk.GetImageFromArray(self.__imageData)
-        sitk_image.SetSpacing([float(self.__pixelspacing[2]), \
-                                float(self.__pixelspacing[1]), \
-                                float(self.__pixelspacing[0])])
-        print("{}: spacing:  {}".format(inspect.stack()[0][3],sitk_image.GetSpacing()))
-        num_dim = sitk_image.GetDimension()
-        orig_pixelid = sitk_image.GetPixelIDValue()
-        orig_origin = sitk_image.GetOrigin()
-        orig_direction = sitk_image.GetDirection()
-        orig_spacing = sitk_image.GetSpacing()
-        orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
-    
-        print(orig_spacing)
-        if(ipFact == 1.0 and slFact == 1.0):
+            print("{}: input last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-1])))
+            print("{}: input 2last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-2])))
+            print("{}: input 3last slice sum:  {}".format(inspect.stack()[0][3],np.sum(self.__imageData[:,:,-3])))
+            
+            sitk_image = sitk.GetImageFromArray(self.__imageData)
+            sitk_image.SetSpacing([float(self.__pixelspacing[2]), \
+                                    float(self.__pixelspacing[1]), \
+                                    float(self.__pixelspacing[0])])
+            print("{}: spacing:  {}".format(inspect.stack()[0][3],sitk_image.GetSpacing()))
+            num_dim = sitk_image.GetDimension()
+            orig_pixelid = sitk_image.GetPixelIDValue()
+            orig_origin = sitk_image.GetOrigin()
+            orig_direction = sitk_image.GetDirection()
+            orig_spacing = sitk_image.GetSpacing()
+            orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
+        
+            print(orig_spacing)
+            if(ipFact == 1.0 and slFact == 1.0):
+                new_spacing = orig_spacing
+                new_size = orig_size
+            else:
+                new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]       
+                new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
+            sitk_interpolator = sitk.sitkLinear
+        
+            new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
+            new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
+        
+            resample_filter = sitk.ResampleImageFilter()
+        
+            #update for sitk 2.0.2 - not yet tested
+            resample_filter.SetSize(new_size)
+            resample_filter.SetTransform(sitk.Transform())
+            resample_filter.SetInterpolator(sitk_interpolator)
+            resample_filter.SetOutputOrigin(orig_origin)
+            resample_filter.SetOutputSpacing(new_spacing)
+            resample_filter.SetOutputOrigin(orig_direction)
+            resample_filter.SetOutputPixelType(orig_pixelid)
+            resampled_sitk_image = resample_filter.Execute(sitk_image)
+            
+            
+            tmp=np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
+            print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-1,:,:])))
+            print("{}: 2lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-2,:,:])))
+            print("{}: 3lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-3,:,:])))
+        
+    #         resampled_sitk_image = resample_filter.Execute(sitk_image,
+    #                                                        new_size,
+    #                                                        sitk.Transform(),
+    #                                                        sitk_interpolator,
+    #                                                        orig_origin,
+    #                                                        new_spacing,
+    #                                                        orig_direction,
+    #                                                        0,
+    #                                                        orig_pixelid)
+                                                        
+            self.__imageData = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
+            self.__pixeldims = self.__imageData.shape
+            self.__pixelspacing = new_spacing
+            self.__winlevel = self.__imageData.min()
+            self.__winwidth = self.__imageData.max()-self.__imageData.min()
+
+        else:
+            pStr ='No resampling, factors are %f and %f ' % (ipFact,slFact)
+            print(pStr)
+
+            sitk_image = sitk.GetImageFromArray(self.__imageData)
+            sitk_image.SetSpacing([float(self.__pixelspacing[2]), \
+                                    float(self.__pixelspacing[1]), \
+                                    float(self.__pixelspacing[0])])
+            #print("{}: spacing:  {}".format(inspect.stack()[0][3],sitk_image.GetSpacing()))
+            num_dim = sitk_image.GetDimension()
+            orig_pixelid = sitk_image.GetPixelIDValue()
+            orig_origin = sitk_image.GetOrigin()
+            orig_direction = sitk_image.GetDirection()
+            orig_spacing = sitk_image.GetSpacing()
+            orig_size = np.array(sitk_image.GetSize(), dtype=np.int)
             new_spacing = orig_spacing
             new_size = orig_size
-        else:
-            new_spacing = [orig_spacing[0]/ipFact,orig_spacing[1]/slFact, orig_spacing[2]/ipFact]       
-            new_size = orig_size*(np.array(orig_spacing)/np.array(new_spacing))
-        sitk_interpolator = sitk.sitkLinear
-    
-        new_size = np.ceil(new_size).astype(np.int) #  Image dimensions are in integers
-        new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
-    
-        resample_filter = sitk.ResampleImageFilter()
-    
-        #update for sitk 2.0.2 - not yet tested
-        resample_filter.SetSize(new_size)
-        resample_filter.SetTransform(sitk.Transform())
-        resample_filter.SetInterpolator(sitk_interpolator)
-        resample_filter.SetOutputOrigin(orig_origin)
-        resample_filter.SetOutputSpacing(new_spacing)
-        resample_filter.SetOutputOrigin(orig_direction)
-        resample_filter.SetOutputPixelType(orig_pixelid)
-        resampled_sitk_image = resample_filter.Execute(sitk_image)
+            new_size = [int(s) for s in new_size] #  SimpleITK expects lists, not ndarrays
         
-        
-        tmp=np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
-        print("{}: lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-1,:,:])))
-        print("{}: 2lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-2,:,:])))
-        print("{}: 3lstSlice:  {}".format(inspect.stack()[0][3],np.sum(tmp[-3,:,:])))
-    
-#         resampled_sitk_image = resample_filter.Execute(sitk_image,
-#                                                        new_size,
-#                                                        sitk.Transform(),
-#                                                        sitk_interpolator,
-#                                                        orig_origin,
-#                                                        new_spacing,
-#                                                        orig_direction,
-#                                                        0,
-#                                                        orig_pixelid)
-                                                       
-        self.__imageData = np.transpose(sitk.GetArrayFromImage(resampled_sitk_image), axes=[2,1,0])
-        self.__pixeldims = self.__imageData.shape
-        self.__pixelspacing = new_spacing
-        self.__winlevel = self.__imageData.min()
-        self.__winwidth = self.__imageData.max()-self.__imageData.min()
+            resample_filter = sitk.ResampleImageFilter()
+                                                        
+            self.__imageData = np.transpose(sitk.GetArrayFromImage(sitk_image), axes=[2,1,0])
+            self.__pixeldims = self.__imageData.shape
+            self.__pixelspacing = new_spacing
+            self.__winlevel = self.__imageData.min()
+            self.__winwidth = self.__imageData.max()-self.__imageData.min()
+
+
+
+
+
 #        self.__imgorientation = 1 # x-y
 #        self.__curSlice = self.__pixeldims[2]//2
 #        self.setSlice(self.__curSlice)
