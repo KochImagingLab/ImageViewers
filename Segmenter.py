@@ -121,41 +121,17 @@ def procThreeD():
     global procThree
     
     procThree = threeDBox1.checkState()
-    
-    #print('Into 3D Proc Changer')
-    #print(procThree)
-#    global vlayout
-#    global chGroupBox
-#    global layout
-#    global thruplaneBox
-#
-#    viewer1.setVertVal(viewer1.getImgWidth() // 2)
-#    viewer1.setHorizVal(viewer1.getImgHeight() // 2)
-#
-#    state = viewer1.setCrosshair(crosshairsBox1.checkState())
-#
-#    if(state != 0):
-#        if(crosshairsBox1.checkState() == 2):
-#            verscrollbar.setValue(viewer1.getVertVal())
-#            horscrollbar.setValue(viewer1.getHorizVal())
-#            vlayout.addWidget(chGroupBox)
-#        else:
-#            layout.removeWidget(chGroupBox)
-#            chGroupBox.setParent(None)
-#            thruplaneBox.setCheckState(0)
-        
-        
-#def enableThroughPlane():
-#
-#    global viewer1
-#    global thruplaneBox
-#
-#    viewer1.setThruPlane(thruplaneBox.checkState())
-        
+
+def procAddBox():
+    global viewer1
+    global addBox1
+    global procAdd
+    procAdd = addBox1.checkState()
     
 def handleLeftClick(x, y):
     global viewer1
     global procThree
+    global procAdd
     global thSet
     global bboxSI
     global bboxSL
@@ -166,7 +142,7 @@ def handleLeftClick(x, y):
     if( 0 <= row < viewer1.getImgHeight() and 0 <= column < viewer1.getImgWidth()):
         #print('Button Clicked')
         #print(thSet)
-        viewer1.segmentImageCallback(row,column,thSet,procThree)
+        viewer1.segmentImageCallback(row,column,thSet,procThree, procAdd)
         #print(viewer1.getImageMaximum())
         #horizScrollChange(row)
         #vertScrollChange(column)
@@ -398,6 +374,7 @@ def main(thisFile,outFile,ipFact,slFact):
     #global verscrollbar
     global openFileText1
     global threeDBox1
+    global addBox1
     global vlayout
     global chGroupBox
     global layout
@@ -413,8 +390,10 @@ def main(thisFile,outFile,ipFact,slFact):
     #global horTextbox
     global window
     global procThree
+    global procAdd
     
     procThree = 0
+    procAdd = 0
     thSet = 0.5
     
  
@@ -448,6 +427,10 @@ def main(thisFile,outFile,ipFact,slFact):
     threeDBox1 = QCheckBox()
     threeDBox1.setText('3D Segmentation')
     threeDBox1.setCheckState(0)
+
+    addBox1 = QCheckBox()
+    addBox1.setText("Add to Segmentation")
+    addBox1.setCheckState(0)
 #
      
 #    # -----------------------------------------------
@@ -593,6 +576,7 @@ def main(thisFile,outFile,ipFact,slFact):
     winwidthText.returnPressed.connect(wwtextchange)  
     ortlist.currentIndexChanged.connect(ortChange)
     threeDBox1.toggled.connect(procThreeD)
+    addBox1.toggled.connect(procAddBox)
     
     #bs ortChange(1)
      
@@ -662,6 +646,8 @@ def main(thisFile,outFile,ipFact,slFact):
     #vlayout.addWidget(ortlist)
     #vlayout.addSpacing(10)
     vlayout.addWidget(threeDBox1)
+    vlayout.addSpacing(1)
+    vlayout.addWidget(addBox1)
     vlayout.addSpacing(10)
     vlayout.addWidget(threshGroupBox)
     vlayout.addSpacing(10)

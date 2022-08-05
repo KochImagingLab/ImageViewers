@@ -228,7 +228,7 @@ class QtImageViewer(QGraphicsView):
         return dout.astype(np.uint8)
         
     
-    def segmentImageCallback(self,row,column,thSet,procThree):
+    def segmentImageCallback(self,row,column,thSet,procThree, procAdd):
         
     
         if procThree == 2:   # 3D seed segmentation
@@ -241,10 +241,10 @@ class QtImageViewer(QGraphicsView):
                 seedy = self.getCurSlice()
                 seedz = column
             elif(self.__imgorientation == 2):
-                #print("Segmentation for this orientation has not been tested!")
+                print("Segmentation for this orientation has not been tested!")
                 seedx = self.getCurSlice()
-                seedy = column 
-                seedz = self.getImgHeight()-1-row 
+                seedz = column 
+                seedy = self.getImgHeight()-1-row 
             else: #0 or 3
 #                 seedx = column
 #                 seedy = self.getImgHeight()-1-row
@@ -274,6 +274,11 @@ class QtImageViewer(QGraphicsView):
             
             segBox = self.drawSegBox3D(thisVol,seedx,seedy,seedz)
             segVolOut = self.segVolBasedOnSeed(thisVol,seedx,seedy,seedz,thSet)
+            if(procAdd):
+                if(segVolOut.shape == self.__segData.shape):
+                    segVolOut = np.logical_or(self.__segData, segVolOut)
+                
+            
             
             #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
             
@@ -334,7 +339,18 @@ class QtImageViewer(QGraphicsView):
             
             
             segBox = self.drawSegBox2D(thisSlicePlane,seedx,seedy)
-            segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,thSet)
+            oldSegSliceOut = []
+            if(self.__imgorientation == 1):
+                oldSegSliceOut = self.__segData[:,self.getCurSlice(),:] 
+            elif(self.__imgorientation == 2):
+                oldSegSliceOut = self.__segData[:,:,self.getCurSlice()] 
+            else:
+                oldSegSliceOut = self.__segData[self.getCurSlice(),:,:] 
+
+            if(procAdd == 2):
+                segSliceOut = np.logical_or(self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,thSet),oldSegSliceOut)
+            else:  
+                segSliceOut = self.segSliceBasedOnSeed(thisSlicePlane,seedx,seedy,thSet)
             
             #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(segSliceOut, axes=[1,0])),'fullSeg.nii')
             
@@ -350,20 +366,20 @@ class QtImageViewer(QGraphicsView):
             
             #thisSlicePlane = 0
             
+           
             #self.__imageData[:,:,self.getCurSlice()] = thisSlicePlane
            
             self.__segInfo[0,self.getCurSlice()] = seedx
             self.__segInfo[1,self.getCurSlice()] = seedy
+
             self.__segInfo[2,self.getCurSlice()] = self.__bboxIP
             self.__segInfo[3,self.getCurSlice()] = self.__bboxSL
             self.__segInfo[4,self.getCurSlice()] = thSet
-           
             if(self.__imgorientation == 1):
                 self.__imageData[:,self.getCurSlice(),:] = sliceVis2
                 self.__segData[:,self.getCurSlice(),:] = segSliceOut
                 self.__segBox[:,self.getCurSlice(),:] = segBox
             elif(self.__imgorientation == 2):
-                
                 self.__imageData[:,:,self.getCurSlice()] = sliceVis2
                 self.__segData[:,:,self.getCurSlice()] = segSliceOut
                 self.__segBox[:,:,self.getCurSlice()] = segBox
@@ -826,12 +842,12 @@ class QtImageViewer(QGraphicsView):
         niiFile = '%s_segBox.nii' % outFile
         pStr = 'Outputting segmentation to file %s' % niiFile
         print(pStr)
-        sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segBox, axes=[2,1,0])),niiFile)
+        #sitk.WriteImage(sitk.GetImageFromArray(np.transpose(self.__segBox, axes=[2,1,0])),niiFile)
         
         infoFile = '%s_segInfo.npy' % outFile
         pStr = 'Outputting info to file %s' % infoFile
         print(pStr)
-        np.save(infoFile,self.__segInfo)
+        #np.save(infoFile,self.__segInfo)
      
     def resampleImage(self,ipFact,slFact):
         if(ipFact != 1.0 or slFact != 1.0):
