@@ -5,3 +5,4 @@ __pycache__
 .project
 .pydevproject
 .DS_Store
+ImageViewers.code-workspace
