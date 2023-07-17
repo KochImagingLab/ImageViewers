@@ -19,7 +19,7 @@ class ImageSliceCompare3D:
     
     """
     
-    def __init__(self, volume,volume2,mini,maxi,figsize=(8,8), cmap='gray',):
+    def __init__(self, volume,volume2,mini,maxi,figsize=(10,6), cmap='gray',):
         self.volume = volume
         self.volume2 = volume2  
         self.figsize = figsize
@@ -47,10 +47,12 @@ class ImageSliceCompare3D:
     def plot_slice(self, z):
         # Plot slice for the given plane and slice
         self.fig = plt.figure(figsize=self.figsize)
+        self.fig.add_subplot(1,2,1)
         plt.imshow(self.vol[:,:,z], cmap=plt.get_cmap(self.cmap), 
             vmin=self.v[0], vmax=self.v[1])
         
-        self.fig2 = plt.figure(figsize=self.figsize)
+        #self.fig2 = plt.figure(figsize=self.figsize)
+        self.fig.add_subplot(1,2,2)
         plt.imshow(self.vol2[:,:,z], cmap=plt.get_cmap(self.cmap), 
             vmin=self.v[0], vmax=self.v[1])
         
